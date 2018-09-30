@@ -27,9 +27,9 @@ def main():
 
     try:
         db.execute("""CREATE TABLE authors(id SERIAL PRIMARY KEY,
-            name VARCHAR NOT NULL)""")
+            name VARCHAR UNIQUE NOT NULL)""")
         db.execute("""CREATE TABLE books(isbn VARCHAR UNIQUE,
-            name VARCHAR NOT NULL, year INTEGER NOT NULL,
+            title VARCHAR NOT NULL, year INTEGER NOT NULL,
             author_id INTEGER REFERENCES authors)""")
         db.execute("""CREATE TABLE users(id SERIAL PRIMARY KEY,
             username VARCHAR, password_hash VARCHAR)""")

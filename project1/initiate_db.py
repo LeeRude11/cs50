@@ -35,8 +35,7 @@ def main():
             username VARCHAR, password_hash VARCHAR)""")
         db.execute("""CREATE TABLE reviews(rating INTEGER NOT NULL,
             review VARCHAR, user_id INTEGER REFERENCES users)""")
-    # exc.ProgrammingError
-    except(KeyError):
+    except(exc.ProgrammingError):
         # TODO likely more possible reasons
         print("It appears tables are already created.\n Use -rw flag")
         return 1
@@ -47,8 +46,8 @@ def main():
 
 # TODO hardcoded stuff
 def drop_tables():
-    for table in ["authors", "books", "users", "reviews"]:
-        db.execute("DROP TABLE " + table)
+    for table in ["books", "authors", "reviews", "users"]:
+        db.execute(f"DROP TABLE {table}")
     db.commit()
     print("Successfully dropped")
     return None

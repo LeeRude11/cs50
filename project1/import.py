@@ -22,10 +22,21 @@ def main():
     if os.path.isfile(args.input) is False:
         print("Input file was not found")
         return 1
-    parse_csv_w_function(os.input, write_book_to_db)
+
+    parse_csv_w_function(args.input, write_book_to_db)
+    db.commit()
 
 
 def write_book_to_db(entry):
+    # add author if he is not in database
+    # TODO return author_id from query?
+    db.execute("""INSERT INTO authors(name) VALUES(:name)
+               ON CONFLICT DO NOTHING""",
+               {"name": entry["author"]})
+    db.execute("""INSERT INTO books(isbn, title, year, author_id)
+               VALUES(:isbn, :title, :year,
+               (SELECT id FROM authors WHERE name=:author))""",
+               entry)
     return None
 
 
@@ -34,8 +45,13 @@ def parse_csv_w_function(csv_name, apply_func):
     with open(csv_name) as csv_file:
         entries = csv.reader(csv_file)
         headers = entries.__next__()
+        # TODO pass generator to query execute many? timeit
         for entry in entries:
             entry_dict = dict(zip(headers, entry))
             # TODO here I pass dict to DB INPUT function
             # when this whole function exits, call db.commit()
             apply_func(entry_dict)
+
+
+if __name__ == "__main__":
+    main()

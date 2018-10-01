@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, session
+from flask import Flask, session, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -24,3 +24,41 @@ db = scoped_session(sessionmaker(bind=engine))
 @app.route("/")
 def index():
     return "Project 1: TODO"
+
+
+@app.route("/registration", methods=["GET", "POST"])
+def registration():
+    return None
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    return None
+
+
+@app.route("/logout")
+def logout():
+    return None
+
+
+@app.route("/search", methods=["GET", "POST"])
+def search():
+    return None
+
+
+# TODO render review option for authorised
+@app.route("/book_page")
+def book_page():
+    # TODO call GoodReads; helpers?
+    return None
+
+
+# TODO redirect to login for unauthorised
+@app.route("/review", methods=["GET", "POST"])
+def review():
+    return None
+
+
+@app.route("/api/<isbn>")
+def api():
+    return jsonify(None)

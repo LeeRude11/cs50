@@ -27,22 +27,8 @@ def main():
     db.commit()
 
 
-def write_book_to_db_old(entry):
-    # add author if he is not in database
-    # TODO return author_id from query?
-    # on conlficl the id is still assigned, many spaces in indices
-    db.execute("""INSERT INTO authors(name) VALUES(:name)
-               ON CONFLICT DO NOTHING""",
-               {"name": entry["author"]})
-    db.execute("""INSERT INTO books(isbn, title, year, author_id)
-               VALUES(:isbn, :title, :year,
-               (SELECT id FROM authors WHERE name=:author))""",
-               entry)
-    return None
-
-
-# https://dba.stackexchange.com/a/46477
 # add book and add author if not present
+# https://dba.stackexchange.com/a/46477
 def write_book_to_db(entry):
     db.execute("""WITH sel AS (
        SELECT entry.isbn, entry.title, entry.year, entry.name,

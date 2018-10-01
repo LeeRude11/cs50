@@ -27,9 +27,10 @@ def main():
     db.commit()
 
 
-def write_book_to_db(entry):
+def write_book_to_db_old(entry):
     # add author if he is not in database
     # TODO return author_id from query?
+    # on conlficl the id is still assigned, many spaces in indices
     db.execute("""INSERT INTO authors(name) VALUES(:name)
                ON CONFLICT DO NOTHING""",
                {"name": entry["author"]})
@@ -38,6 +39,30 @@ def write_book_to_db(entry):
                (SELECT id FROM authors WHERE name=:author))""",
                entry)
     return None
+
+
+# https://dba.stackexchange.com/a/46477
+# add book and add author if not present
+def write_book_to_db(entry):
+    db.execute("""WITH sel AS (
+       SELECT entry.isbn, entry.title, entry.year, entry.name,
+       authors.id AS author_id
+       FROM  (
+          VALUES
+             (text :isbn, text :title, integer :year, text :author)
+          ) entry (isbn, title, year, name)
+       LEFT JOIN authors USING (name)
+       )
+    , ins AS (
+       INSERT INTO authors (name)
+       SELECT name FROM sel WHERE author_id IS NULL
+       RETURNING id AS author_id, name
+       )
+    INSERT INTO books (isbn, title, year, author_id)
+    SELECT sel.isbn, sel.title, sel.year,
+    COALESCE(sel.author_id, ins.author_id)
+    FROM sel
+    LEFT JOIN ins USING (name)""", entry)
 
 
 def parse_csv_w_function(csv_name, apply_func):

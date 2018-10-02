@@ -110,7 +110,27 @@ def logout():
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
-    return None
+    if request.method == "POST":
+
+        form = request.form.to_dict()
+        verified = verify_form(form, ["query"])
+        if verified is not None:
+            return verified, 403
+
+        # PostgreSQL FTS
+        # TODO consider indexing
+        form["query"] = form["query"].replace(" ", "&")
+        rows = db.execute("""SELECT b.title, b.year, b.isbn, a.name AS author
+                        FROM books b, authors a WHERE a.id = b.author_id AND
+                        to_tsvector(title||' '||name||' '||year||' '||isbn)
+                        @@ to_tsquery(:query)""", form).fetchall()
+
+        if len(rows) == 0:
+            rows = "No results :("
+        return render_template("search.html", rows=rows)
+
+    else:
+        return render_template("search.html", rows=None)
 
 
 # TODO render review option for authorised

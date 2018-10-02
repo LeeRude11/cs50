@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Search Books
+{% endblock %}
+
+{% block main %}
+    <form action="/search" method="post">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="query" placeholder="ISBN, title or author" type="text"/>
+        </div>
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+    {% if rows is string %}
+      <div>
+        {{rows}}
+      </div>
+    {% elif rows is not none %}
+    <ul>
+      {% for row in rows %}
+        <li>{{row.title}} by {{row.author}}, {{row.year}}, ISBN {{row.isbn}}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+{% endblock %}

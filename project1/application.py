@@ -33,25 +33,25 @@ def index():
 def register():
     """Register user"""
     if request.method == "POST":
+
+        form = request.form.to_dict()
         # Ensure proper form
-        verified = verify_form(request.form,
-                               ["username", "password", "confirmation"])
+        verified = verify_form(form, ["username", "password", "confirmation"])
         if verified is not None:
             return verified, 400
 
-        elif request.form.get("password") != request.form.get("confirmation"):
+        elif form.get("password") != form.get("confirmation"):
             return "passwords don't match", 400
 
         if db.execute("SELECT * FROM users WHERE username = :username",
-                      {"username": request.form.get(
-                       "username")}).fetchone() is not None:
+                      form).fetchone() is not None:
             return "this username is taken", 400
+
+        form["hashed"] = generate_password_hash(form.get("password"))
 
         db.execute("""INSERT INTO users (username, password_hash)
                    VALUES (:username, :hashed)""",
-                   {"username": request.form.get("username"),
-                    "hashed": generate_password_hash(
-                    request.form.get("password"))})
+                   form)
         db.commit()
 
         return redirect("/login")
@@ -71,19 +71,19 @@ def login():
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
+        form = request.form.to_dict()
         # Ensure username and password were submitted
-        verified = verify_form(request.form, ["username", "password"])
+        verified = verify_form(form, ["username", "password"])
         if verified is not None:
             return verified, 403
 
         # Query database for username
         rows = db.execute("SELECT * FROM users WHERE username = :username",
-                          {"username": request.form.get(
-                           "username")}).fetchall()
+                          form).fetchall()
 
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(
-                rows[0]["password_hash"], request.form.get("password")):
+                rows[0]["password_hash"], form.get("password")):
             return "invalid username and/or password", 403
 
         # Remember which user has logged in

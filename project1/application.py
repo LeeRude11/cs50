@@ -31,7 +31,34 @@ def index():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    return None
+    """Register user"""
+    if request.method == "POST":
+        # Ensure proper form
+        verified = verify_form(request.form,
+                               ["username", "password", "confirmation"])
+        if verified is not None:
+            return verified, 400
+
+        elif request.form.get("password") != request.form.get("confirmation"):
+            return "passwords don't match", 400
+
+        if db.execute("SELECT * FROM users WHERE username = :username",
+                      {"username": request.form.get(
+                       "username")}).fetchone() is not None:
+            return "this username is taken", 400
+
+        db.execute("""INSERT INTO users (username, password_hash)
+                   VALUES (:username, :hashed)""",
+                   {"username": request.form.get("username"),
+                    "hashed": generate_password_hash(
+                    request.form.get("password"))})
+        db.commit()
+
+        return redirect("/login")
+
+    else:
+
+        return render_template("register.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -117,7 +144,7 @@ def verify_form(a_form, items):
     for item in items:
         if a_form.get(item) in (None, ""):
             if item == "confirmation":
-                return "must re-enter the password"
+                return "must re-enter password"
             else:
                 return f"must provide {item}"
     return None

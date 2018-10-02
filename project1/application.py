@@ -26,7 +26,7 @@ db = scoped_session(sessionmaker(bind=engine))
 
 @app.route("/")
 def index():
-    return "Project 1: TODO"
+    return render_template("index.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -44,20 +44,18 @@ def login():
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
-        # Ensure username was submitted
-        if not request.form.get("username"):
-            return "must provide username", 403
-
-        # Ensure password was submitted
-        elif not request.form.get("password"):
-            return "must provide password", 403
+        # Ensure username and password were submitted
+        verified = verify_form(request.form, ["username", "password"])
+        if verified is not None:
+            return verified, 403
 
         # Query database for username
         rows = db.execute("SELECT * FROM users WHERE username = :username",
-                          username=request.form.get("username"))
+                          {"username": request.form.get(
+                           "username")}).fetchall()
 
         # Ensure username exists and password is correct
-        if rows.rowcount != 1 or not check_password_hash(
+        if len(rows) != 1 or not check_password_hash(
                 rows[0]["password_hash"], request.form.get("password")):
             return "invalid username and/or password", 403
 
@@ -113,3 +111,13 @@ def errorhandler(error):
 # listen for errors
 for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
+
+
+def verify_form(a_form, items):
+    for item in items:
+        if a_form.get(item) in (None, ""):
+            if item == "confirmation":
+                return "must re-enter the password"
+            else:
+                return f"must provide {item}"
+    return None

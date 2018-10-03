@@ -34,7 +34,8 @@ def main():
         db.execute("""CREATE TABLE users(id SERIAL PRIMARY KEY,
             username VARCHAR, password_hash VARCHAR)""")
         db.execute("""CREATE TABLE reviews(rating INTEGER NOT NULL,
-            review VARCHAR, user_id INTEGER REFERENCES users)""")
+            review VARCHAR, user_id INTEGER REFERENCES users,
+            book_isbn VARCHAR REFERENCES books(isbn))""")
     except(exc.ProgrammingError):
         # TODO likely more possible reasons
         print("It appears tables are already created.\n Use -rw flag")

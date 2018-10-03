@@ -27,6 +27,7 @@ def main():
 
     parse_csv_w_function(args.input, write_book_to_db)
     db.commit()
+    print("Import successful")
 
 
 # add book and add author if not present

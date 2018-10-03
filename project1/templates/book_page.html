@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{book.title}} - {{book.author}}
+{% endblock %}
+
+{% block main %}
+    <div>
+      {{book.title}} by {{book.author}}, {{book.year}}, ISBN {{book.isbn}}
+    </div>
+    <div>
+    {% if book.rating is not none %}
+      {{book.rating}} as rated by {{book.count}} users
+    {% else %}
+      Be the first to review this book!
+    {% endif %}
+    </div>
+    {% if reviews is not none %}
+    <ul>
+      {% for review in reviews%}
+      <li>
+        <span>
+          {{ review.rating }}
+        </span>
+        <div>
+          {{ review.review }}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+{% endblock %}

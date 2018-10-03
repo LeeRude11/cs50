@@ -125,19 +125,37 @@ def search():
                         to_tsvector(title||' '||name||' '||year||' '||isbn)
                         @@ to_tsquery(:query)""", form).fetchall()
 
-        if len(rows) == 0:
-            rows = "No results :("
         return render_template("search.html", rows=rows)
 
     else:
-        return render_template("search.html", rows=None)
+        return render_template("search.html")
 
 
 # TODO render review option for authorised
-@app.route("/book_page")
-def book_page():
+@app.route("/books/<isbn>")
+def books(isbn):
+
+    book = db.execute("""SELECT b.title, b.year, b.isbn, a.name AS author,
+                    to_char(AVG(r.rating), '0.00') AS rating,
+                    COUNT(r.rating) AS count
+                    FROM books b INNER JOIN authors a ON b.author_id = a.id
+                    LEFT OUTER JOIN reviews r ON b.isbn = r.book_isbn
+                    WHERE b.isbn = :isbn GROUP BY title, year, isbn, author""",
+                      {"isbn": isbn}).fetchone()
+
+    if book is None:
+        raise default_exceptions[404]
+
+    if book["count"] != 0:
+        reviews = db.execute("""SELECT r.rating, r.review
+                        FROM reviews r
+                        WHERE r.book_isbn = :isbn""",
+                             {"isbn": isbn}).fetchall()
+    else:
+        reviews = None
+
     # TODO call GoodReads; helpers?
-    return None
+    return render_template("book_page.html", book=book, reviews=reviews)
 
 
 # TODO redirect to login for unauthorised

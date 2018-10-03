@@ -11,15 +11,13 @@
         </div>
         <button class="btn btn-primary" type="submit">Search</button>
     </form>
-    {% if rows is string %}
-      <div>
-        {{rows}}
-      </div>
-    {% elif rows is not none %}
-    <ul>
-      {% for row in rows %}
-        <li>{{row.title}} by {{row.author}}, {{row.year}}, ISBN {{row.isbn}}</li>
-      {% endfor %}
-    </ul>
+    {% if rows is not undefined %}
+      <ul>
+        {% for row in rows %}
+          <li>{{row.title}} by {{row.author}}, {{row.year}}, ISBN {{row.isbn}}</li>
+        {% else %}
+          <li>No results :(</li>
+        {% endfor %}
+      </ul>
     {% endif %}
 {% endblock %}

@@ -148,12 +148,13 @@ def search():
         return render_template("search.html")
 
 
-@app.route("/books/<isbn>")
+@app.route("/api/<isbn>", endpoint="api")
+@app.route("/books/<isbn>", endpoint="books")
 def books(isbn):
 
     book = db.execute("""SELECT b.title, b.year, b.isbn, a.name AS author,
-                    to_char(AVG(r.rating), '0.00') AS rating,
-                    COUNT(r.rating) AS count
+                    to_char(AVG(r.rating), 'FM0.00') AS average_rating,
+                    COUNT(r.rating) AS review_count
                     FROM books b INNER JOIN authors a ON b.author_id = a.id
                     LEFT OUTER JOIN reviews r ON b.isbn = r.book_isbn
                     WHERE b.isbn = :isbn GROUP BY title, year, isbn, author""",
@@ -162,7 +163,10 @@ def books(isbn):
     if book is None:
         raise default_exceptions[404]
 
-    if book["count"] != 0:
+    if request.endpoint == "api":
+        return jsonify(dict(book))
+
+    if book["review_count"] != 0:
         reviews = db.execute("""SELECT r.rating, r.review
                         FROM reviews r WHERE r.book_isbn = :isbn""",
                              {"isbn": isbn}).fetchall()
@@ -212,11 +216,6 @@ def review(isbn):
     db.commit()
 
     return redirect(f"/books/{isbn}")
-
-
-@app.route("/api/<isbn>")
-def api():
-    return jsonify(None)
 
 
 def errorhandler(error):

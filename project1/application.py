@@ -14,6 +14,16 @@ app = Flask(__name__)
 if not os.getenv("DATABASE_URL"):
     raise RuntimeError("DATABASE_URL is not set")
 
+
+# Ensure responses aren't cached
+@app.after_request
+def after_request(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Expires"] = 0
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+
 # Configure session to use filesystem
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -131,7 +141,6 @@ def search():
         return render_template("search.html")
 
 
-# TODO render review option for authorised
 @app.route("/books/<isbn>")
 def books(isbn):
 
@@ -148,8 +157,7 @@ def books(isbn):
 
     if book["count"] != 0:
         reviews = db.execute("""SELECT r.rating, r.review
-                        FROM reviews r
-                        WHERE r.book_isbn = :isbn""",
+                        FROM reviews r WHERE r.book_isbn = :isbn""",
                              {"isbn": isbn}).fetchall()
     else:
         reviews = None
@@ -158,10 +166,43 @@ def books(isbn):
     return render_template("book_page.html", book=book, reviews=reviews)
 
 
-# TODO redirect to login for unauthorised
-@app.route("/review", methods=["GET", "POST"])
-def review():
-    return None
+@app.route("/review/<isbn>", methods=["POST"])
+def review(isbn):
+    # TODO @login_required if more come up
+    # TODO flask docs, default value
+    if not session.get("user_id"):
+        return "Must be logged in"
+
+    parameters = {
+        "user_id": session["user_id"],
+        "isbn": isbn
+    }
+
+    existing = db.execute("""SELECT * FROM reviews WHERE user_id = :user_id
+                AND book_isbn = :isbn""", parameters).rowcount
+    # TODO save text and rate, offer rewrite
+    if existing > 0:
+        return "You already reviewed this book"
+
+    # TODO function to confirm book is real
+    book = db.execute("""SELECT * FROM books
+                    WHERE isbn = :isbn""", parameters).rowcount
+    if book != 1:
+        return "No such book"
+
+    # TODO "must provide"? Appropriate message please
+    form = request.form.to_dict()
+    verified = verify_form(form, ["rating", "review_text"])
+    if verified is not None:
+        return verified, 403
+
+    parameters.update(form)
+
+    db.execute("""INSERT INTO reviews(rating, review, user_id, book_isbn)
+            VALUES(:rating, :review_text, :user_id, :isbn)""", parameters)
+    db.commit()
+
+    return redirect(f"/books/{isbn}")
 
 
 @app.route("/api/<isbn>")

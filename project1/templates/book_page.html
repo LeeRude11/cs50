@@ -9,8 +9,8 @@
       {{book.title}} by {{book.author}}, {{book.year}}, ISBN {{book.isbn}}
     </div>
     <div>
-    {% if book.rating is not none %}
-      {{book.rating}} as rated by {{book.count}} users
+    {% if book.average_rating is not none %}
+      {{book.average_rating}} as rated by {{book.review_count}} users
     {% else %}
       Be the first to review this book!
     {% endif %}

@@ -4,6 +4,7 @@ from flask import Flask, session, jsonify, redirect, request, render_template
 from flask_session import Session
 from werkzeug.exceptions import default_exceptions
 from werkzeug.security import check_password_hash, generate_password_hash
+import requests
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -13,6 +14,8 @@ app = Flask(__name__)
 # Check for environment variable
 if not os.getenv("DATABASE_URL"):
     raise RuntimeError("DATABASE_URL is not set")
+if not os.getenv("API_KEY"):
+    raise RuntimeError("API_KEY is not set")
 
 
 # Ensure responses aren't cached
@@ -32,6 +35,10 @@ Session(app)
 # Set up database
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
+
+# GoodReads API
+API_KEY = os.getenv("API_KEY")
+API_URL = "https://www.goodreads.com/book/review_counts.json"
 
 
 @app.route("/")
@@ -93,7 +100,7 @@ def login():
 
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(
-                rows[0]["password_hash"], form.get("password")):
+                rows[0]["password_hash"], form["password"]):
             return "invalid username and/or password", 403
 
         # Remember which user has logged in
@@ -162,15 +169,16 @@ def books(isbn):
     else:
         reviews = None
 
-    # TODO call GoodReads; helpers?
-    return render_template("book_page.html", book=book, reviews=reviews)
+    goodreads = requests.get(API_URL, params={"key": API_KEY, "isbns": isbn})
+    goodreads = goodreads.json()["books"][0]
+
+    return render_template("book_page.html", book=book, reviews=reviews,
+                           goodreads=goodreads)
 
 
 @app.route("/review/<isbn>", methods=["POST"])
 def review(isbn):
-    # TODO @login_required if more come up
-    # TODO flask docs, default value
-    if not session.get("user_id"):
+    if session.get("user_id") is None:
         return "Must be logged in"
 
     parameters = {
@@ -178,17 +186,18 @@ def review(isbn):
         "isbn": isbn
     }
 
+    # TODO these two checks are possible in one DB-query
     existing = db.execute("""SELECT * FROM reviews WHERE user_id = :user_id
                 AND book_isbn = :isbn""", parameters).rowcount
     # TODO save text and rate, offer rewrite
-    if existing > 0:
+    if existing != 0:
         return "You already reviewed this book"
 
     # TODO function to confirm book is real
     book = db.execute("""SELECT * FROM books
                     WHERE isbn = :isbn""", parameters).rowcount
     if book != 1:
-        return "No such book"
+        raise default_exceptions[404]
 
     # TODO "must provide"? Appropriate message please
     form = request.form.to_dict()
@@ -219,6 +228,7 @@ for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
 
 
+# TODO flashing messages
 def verify_form(a_form, items):
     for item in items:
         if a_form.get(item) in (None, ""):

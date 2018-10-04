@@ -20,7 +20,7 @@
         <a href={{ url_for("register") }}>Register</a> to rate and review this book.
       </div>
     {% else %}
-      <form action="/review" method="post">
+      <form action="/review/{{book.isbn}}" method="post">
         <div class="form-group">
           <select name="rating" class="form-control mb-2">
             <option value="" selected>Rate this book</option>

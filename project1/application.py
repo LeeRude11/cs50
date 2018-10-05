@@ -1,6 +1,7 @@
 import os
 
-from flask import Flask, session, jsonify, redirect, request, render_template
+from flask import (Flask, session, jsonify, redirect, request, render_template,
+                   flash, abort)
 from flask_session import Session
 from werkzeug.exceptions import default_exceptions
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -52,25 +53,24 @@ def register():
 
     if request.method == "POST":
 
-        form = request.form.to_dict()
-        # Ensure proper form
-        verified = verify_form(form, ["username", "password", "confirmation"])
-        if verified is not None:
-            return verified, 400
-
-        elif form.get("password") != form.get("confirmation"):
-            return "passwords don't match", 400
+        form, flashed = verify_and_return_form(["username", "password",
+                                                "confirmation"])
+        if flashed is True:
+            return render_template("register.html"), 401
 
         if db.execute("SELECT * FROM users WHERE username = :username",
                       form).fetchone() is not None:
-            return "this username is taken", 400
+            flash("This username is taken")
+            return render_template("register.html"), 401
 
-        form["hashed"] = generate_password_hash(form.get("password"))
+        form["hashed"] = generate_password_hash(form["password"])
 
         db.execute("""INSERT INTO users (username, password_hash)
                    VALUES (:username, :hashed)""",
                    form)
         db.commit()
+
+        flash("Successfully registered")
 
         return redirect("/login")
 
@@ -89,11 +89,9 @@ def login():
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
-        form = request.form.to_dict()
-        # Ensure username and password were submitted
-        verified = verify_form(form, ["username", "password"])
-        if verified is not None:
-            return verified, 403
+        form, flashed = verify_and_return_form(["username", "password"])
+        if flashed is True:
+            return render_template("login.html"), 401
 
         # Query database for username
         rows = db.execute("SELECT * FROM users WHERE username = :username",
@@ -102,15 +100,16 @@ def login():
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(
                 rows[0]["password_hash"], form["password"]):
-            return "invalid username and/or password", 403
+            return "invalid username and/or password", 401
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
+        session["username"] = rows[0]["username"]
+        flash(f"Logged in as {session['username']}")
 
         # Redirect user to home page
         return redirect("/")
 
-    # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("login.html")
 
@@ -122,8 +121,7 @@ def logout():
     # Forget any user_id
     session.clear()
 
-    # TODO Redirect user to previous page
-    return redirect("/")
+    return redirect(request.referrer or "/")
 
 
 @app.route("/search", methods=["GET", "POST"])
@@ -132,10 +130,9 @@ def search():
 
     if request.method == "POST":
 
-        form = request.form.to_dict()
-        verified = verify_form(form, ["query"])
-        if verified is not None:
-            return verified, 403
+        form, flashed = verify_and_return_form(["query"])
+        if flashed is True:
+            return render_template("search.html"), 401
 
         # PostgreSQL FTS
         # TODO consider indexing
@@ -165,7 +162,7 @@ def books(isbn):
                       {"isbn": isbn}).fetchone()
 
     if book is None:
-        raise default_exceptions[404]
+        abort(404)
 
     if request.endpoint == "api":
         return jsonify(dict(book))
@@ -189,7 +186,7 @@ def review(isbn):
     """Let users post a review of the book"""
 
     if session.get("user_id") is None:
-        return "Must be logged in"
+        abort(403)
 
     parameters = {
         "user_id": session["user_id"],
@@ -201,19 +198,18 @@ def review(isbn):
                 AND book_isbn = :isbn""", parameters).rowcount
     # TODO save text and rate, offer rewrite
     if existing != 0:
-        return "You already reviewed this book"
+        flash("You already reviewed this book")
+        return redirect(f"/books/{isbn}")
 
-    # TODO function to confirm book is real
     book = db.execute("""SELECT * FROM books
                     WHERE isbn = :isbn""", parameters).rowcount
     if book != 1:
-        raise default_exceptions[404]
+        abort(404)
 
-    # TODO "must provide"? Appropriate message please
-    form = request.form.to_dict()
-    verified = verify_form(form, ["rating", "review_text"])
-    if verified is not None:
-        return verified, 403
+    form, flashed = verify_and_return_form(["rating", "review_text"])
+    if flashed is True:
+        # TODO 401? Render but not redirect
+        return redirect(f"/books/{isbn}")
 
     parameters.update(form)
 
@@ -221,6 +217,7 @@ def review(isbn):
             VALUES(:rating, :review_text, :user_id, :isbn)""", parameters)
     db.commit()
 
+    flash("Successfully published a review!")
     return redirect(f"/books/{isbn}")
 
 
@@ -235,12 +232,26 @@ for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
 
 
-# TODO flashing messages
-def verify_form(a_form, items):
+MISSING_MESSAGES = {
+    "confirmation": "Must re-enter password",
+    "mismatch": "Passwords don't match",
+    "rate": "Book rating is required for a review",
+    "review_text": "Can't submit empty reviews"
+}
+
+
+def verify_and_return_form(items):
+    form = request.form.to_dict()
+    flashed = False
     for item in items:
-        if a_form.get(item) in (None, ""):
-            if item == "confirmation":
-                return "must re-enter password"
-            else:
-                return f"must provide {item}"
-    return None
+        if form.get(item) in (None, ""):
+            flash(MISSING_MESSAGES.get(item) or f"Must provide {item}")
+            flashed = True
+            break
+    else:
+        conf = "confirmation"
+        if (conf in items and form["password"] != form[conf]):
+            flash(MISSING_MESSAGES["mismatch"])
+            flashed = True
+
+    return form, flashed

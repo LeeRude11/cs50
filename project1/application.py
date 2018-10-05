@@ -49,6 +49,7 @@ def index():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
+
     if request.method == "POST":
 
         form = request.form.to_dict()
@@ -127,6 +128,8 @@ def logout():
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
+    """Find a book by its title, author's name, isbn or realease year"""
+
     if request.method == "POST":
 
         form = request.form.to_dict()
@@ -151,6 +154,7 @@ def search():
 @app.route("/api/<isbn>", endpoint="api")
 @app.route("/books/<isbn>", endpoint="books")
 def books(isbn):
+    """Return book's info in either JSON or rendered Jinja template"""
 
     book = db.execute("""SELECT b.title, b.year, b.isbn, a.name AS author,
                     to_char(AVG(r.rating), 'FM0.00') AS average_rating,
@@ -182,6 +186,8 @@ def books(isbn):
 
 @app.route("/review/<isbn>", methods=["POST"])
 def review(isbn):
+    """Let users post a review of the book"""
+
     if session.get("user_id") is None:
         return "Must be logged in"
 
@@ -219,6 +225,8 @@ def review(isbn):
 
 
 def errorhandler(error):
+    """Use a Jinja2 template to inform about errors"""
+
     return render_template("error_render.html", error=error), error.code
 
 

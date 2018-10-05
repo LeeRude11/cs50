@@ -15,9 +15,7 @@
       <ul>
         {% for row in rows %}
           <li>
-            <a href="books/{{row.isbn}}">
-              {{row.title}}
-            </a>
+            <a href="books/{{row.isbn}}">{{row.title}}</a>
             by {{row.author}}, {{row.year}}, ISBN {{row.isbn}}</li>
         {% else %}
           <li>No results :(</li>

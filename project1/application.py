@@ -193,18 +193,17 @@ def review(isbn):
         "isbn": isbn
     }
 
-    # TODO these two checks are possible in one DB-query
-    existing = db.execute("""SELECT * FROM reviews WHERE user_id = :user_id
-                AND book_isbn = :isbn""", parameters).rowcount
-    # TODO save text and rate, offer rewrite
-    if existing != 0:
+    book_and_review = db.execute("""SELECT b.isbn, r.user_id FROM books b
+            LEFT OUTER JOIN reviews r
+            ON (b.isbn = r.book_isbn AND r.user_id = :user_id)
+            WHERE b.isbn = :isbn""", parameters).fetchone()
+
+    if book_and_review is None:
+        abort(404)
+    if book_and_review["user_id"] is not None:
+        # TODO save text and rate, offer rewrite
         flash("You already reviewed this book")
         return redirect(f"/books/{isbn}")
-
-    book = db.execute("""SELECT * FROM books
-                    WHERE isbn = :isbn""", parameters).rowcount
-    if book != 1:
-        abort(404)
 
     form, flashed = verify_and_return_form(["rating", "review_text"])
     if flashed is True:

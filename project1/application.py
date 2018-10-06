@@ -174,8 +174,12 @@ def books(isbn):
     else:
         reviews = None
 
-    goodreads = requests.get(API_URL, params={"key": API_KEY, "isbns": isbn})
-    goodreads = goodreads.json()["books"][0]
+    try:
+        goodreads = requests.get(API_URL, params={
+            "key": API_KEY, "isbns": isbn})
+        goodreads = goodreads.json()["books"][0]
+    except(requests.exceptions.ConnectionError, KeyError):
+        goodreads = None
 
     return render_template("book_page.html", book=book, reviews=reviews,
                            goodreads=goodreads)

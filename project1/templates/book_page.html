@@ -15,7 +15,11 @@
       Be the first to review this book!
     {% endif %}
     <div>
-      {{goodreads.average_rating}} as rated by {{goodreads.work_ratings_count}} GoodReads users.
+      {% if goodreads is not none %}
+        {{goodreads.average_rating}} as rated by {{goodreads.work_ratings_count}} GoodReads users.
+      {% else %}
+        Could not reach the Goodreads API
+      {% endif %}
     </div>
     {% if not session.user_id %}
       <div>

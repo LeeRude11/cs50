@@ -9,8 +9,11 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
 
 LIMIT = 100
-history = {"main": deque([], maxlen=LIMIT)}
-current_users = {"main": []}
+channels = {"main": {
+        "history": deque([], maxlen=LIMIT),
+        "current_users": []
+        }
+    }
 
 
 @app.route("/")
@@ -20,12 +23,13 @@ def index():
 
 @socketio.on("create channel")
 def create_channel(data):
+    print("\nTEST\n")
     emit("TODO")
 
 
 @socketio.on("connect")
 def connect():
-    emit("load history", list(history["main"]))
+    emit("load history", list(channels["main"]["history"]))
 
 
 @socketio.on("enter")
@@ -40,5 +44,5 @@ def send_message(data):
         "name": data.get("name"),
         "text": data.get("text")
     }
-    history["main"].append(message)
+    channels["main"]["history"].append(message)
     emit("receive", message, broadcast=True)

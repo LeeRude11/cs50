@@ -7,11 +7,18 @@
 {% block main %}
   <script src="static/socket.io.js"></script>
   <script src="static/index.js"></script>
-  <div>Hey</div>
   <form id="enter">
     <label for="display-name">Name: </label>
       <input type="text" id="display-name" minlength="3"
         placeholder="Enter your display name" name="name" required />
     <input type="submit" value="Submit">
+  </form>
+  <section id="messages">
+  </section>
+  <form id="send">
+    <label for="message-text">Text: </label>
+      <input type="text" id="message-text" minlength="1"
+        placeholder="Enter your message" name="name" required />
+    <input type="submit" value="Send">
   </form>
 {% endblock %}

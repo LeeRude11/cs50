@@ -7,7 +7,7 @@
 {% block main %}
   <script src="static/socket.io.js"></script>
   <script src="static/index.js"></script>
-  <form id="enter">
+  <form id="register">
     <label for="display-name">Name: </label>
       <input type="text" id="display-name" minlength="3"
         placeholder="Enter your display name" name="name" required />
@@ -15,10 +15,16 @@
   </form>
   <section id="messages">
   </section>
-  <form id="send">
+  <form id="send-message">
     <label for="message-text">Text: </label>
       <input type="text" id="message-text" minlength="1"
         placeholder="Enter your message" name="name" required />
     <input type="submit" value="Send">
+  </form>
+  <form id="create-channel">
+    <label for="channel-name">Create channel: </label>
+      <input type="text" id="channel-name" minlength="1"
+        placeholder="Enter new channel name" name="name" required />
+    <input type="submit" value="Create new channel">
   </form>
 {% endblock %}

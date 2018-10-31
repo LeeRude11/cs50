@@ -22,7 +22,9 @@
             <span>Entered as <span id="bar-name"></span></span>
             <div class="collapse navbar-collapse" id="navbar">
                 <ul>
-                    <li>Some navigation</li>
+                  {% for channel in channels %}
+                    <li>{{ channel }}</li>
+                  {% endfor %}
                 </ul>
             </div>
         </nav>

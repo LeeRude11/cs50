@@ -3,10 +3,13 @@ window.onload = function() {
 
   var messages = document.querySelector('#messages')
 
-  socket.on('load history', function(history) {
-    history.forEach(function(message) {
+  socket.on('load room', function(data) {
+    while (messages.firstChild)
+      messages.removeChild(messages.firstChild)
+    data.history.forEach(function(message) {
       addMessage(message)
     })
+    console.log(data.users)
   });
   var display_name = localStorage.getItem('username') || 'Guest'
 
@@ -37,6 +40,11 @@ window.onload = function() {
     socket.emit('create channel', {name: name, user: display_name});
     return false
   }
+  socket.on('channel created', function(data) {
+    while (messages.firstChild)
+      messages.removeChild(messages.firstChild)
+    // TODO users list
+  })
 
   // TODO callback in emit send?
   socket.on('receive', function(message) {
@@ -50,7 +58,7 @@ window.onload = function() {
     })
   })
 
-  socket.on('channel created', function(data) {
+  socket.on('new channel', function(data) {
     let new_channel = document.createElement('li')
     new_channel.innerHTML = data
     new_channel.addEventListener('click', function(){

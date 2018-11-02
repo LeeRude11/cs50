@@ -14,7 +14,8 @@ window.onload = function() {
   var display_name = localStorage.getItem('username') || 'Guest'
 
   socket.emit('authenticate', {username: display_name})
-  document.querySelector('#bar-name').innerHTML = display_name
+  // TODO only if successful
+  document.querySelector('#bar-name').textContent = display_name
 
   document.querySelector('#register').onsubmit = function(form) {
     let form_name = document.querySelector('#display-name').value
@@ -25,7 +26,7 @@ window.onload = function() {
   socket.on('registered', function(user) {
     localStorage.setItem('username', user)
     display_name = user
-    document.querySelector('#bar-name').innerHTML = display_name
+    document.querySelector('#bar-name').textContent = user
   })
 
   document.querySelector('#send-message').onsubmit = function(form) {
@@ -35,12 +36,12 @@ window.onload = function() {
     return false
   }
 
-  document.querySelector('#create-channel').onsubmit = function(form) {
-    let name = document.querySelector('#channel-name').value
-    socket.emit('create channel', {name: name, user: display_name});
+  document.querySelector('#create-room').onsubmit = function(form) {
+    let name = document.querySelector('#room-name').value
+    socket.emit('create room', {name: name, user: display_name});
     return false
   }
-  socket.on('channel created', function(data) {
+  socket.on('room created', function(data) {
     while (messages.firstChild)
       messages.removeChild(messages.firstChild)
     // TODO users list
@@ -51,29 +52,34 @@ window.onload = function() {
     addMessage(message)
   })
 
-  var channels_list = document.querySelector('#navbar ul')
-  channels_list.querySelectorAll('li').forEach(function(channel) {
-    channel.addEventListener('click', function(){
-      socket.emit('join', {user: display_name, room: channel.innerHTML})
+  var rooms_list = document.querySelector('#navbar ul')
+  rooms_list.querySelectorAll('a').forEach(function(room) {
+    room.addEventListener('click', function(){
+      socket.emit('join', {user: display_name, room: room.textContent})
     })
   })
 
-  socket.on('new channel', function(data) {
-    let new_channel = document.createElement('li')
-    new_channel.innerHTML = data
-    new_channel.addEventListener('click', function(){
-      socket.emit('join', {user: display_name, room: new_channel.innerHTML})
+  socket.on('new room', function(room_name) {
+    let new_room = document.createElement('li')
+    let new_room_link = document.createElement('a')
+    new_room_link.textContent = room_name
+    new_room_link.addEventListener('click', function(){
+      socket.emit('join', {
+        user: display_name,
+        room: room_name
+      })
     })
-    channels_list.appendChild(new_channel)
+    new_room.appendChild(new_room_link)
+    rooms_list.appendChild(new_room)
   })
 
   socket.on('error', function(data) {
-    console.log('Error', data)
+    console.log('Error: ', data)
   })
 }
 
 function addMessage(message) {
   let new_message = document.createElement('div')
-  new_message.innerHTML = message['user'] + ": " + message['text']
+  new_message.textContent = message['user'] + ": " + message['text']
   messages.appendChild(new_message)
 }

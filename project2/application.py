@@ -10,7 +10,7 @@ socketio = SocketIO(app)
 
 LIMIT = 100
 # TODO current users
-channels = {"main": {
+rooms = {"main": {
         "history": deque([], maxlen=LIMIT),
         "current_users": []
         }
@@ -20,7 +20,7 @@ users = {}
 
 @app.route("/")
 def index():
-    return render_template("index.html", channels=channels.keys())
+    return render_template("index.html", rooms=rooms.keys())
 
 
 @socketio.on("connect")
@@ -55,9 +55,11 @@ def disconnect():
     else:
         room = "main"
     try:
-        channels[room]["current_users"].remove(user)
+        rooms[room]["current_users"].remove(user)
     except(ValueError):
-        print("\nNon-existing user disconnected\n")
+        print("\nNon-existing user disconnected")
+        print(rooms[room]["current_users"])
+        print(user, "\n")
     emit("notify", {"user": user, "action": "disconnect"}, room=room)
 
 
@@ -71,34 +73,34 @@ def register(data):
     else:
         room = "main"
         users[user] = {"sid": request.sid, "room": room}
-        channels[room]["current_users"].remove("Guest")
-        channels[room]["current_users"].append(user)
+        rooms[room]["current_users"].remove("Guest")
+        rooms[room]["current_users"].append(user)
         emit("registered", user)
         emit("notify", {"user": user, "action": "register"}, room=room)
 
 
-@socketio.on("create channel")
-def create_channel(data):
-    new_channel = data.get("name")
+@socketio.on("create room")
+def create_room(data):
+    new_room = data.get("name")
     user = data.get("user")
     if user == "Guest":
         emit("error", "Guests can not create rooms")
     elif check_user(user) is False:
         return None
-    elif new_channel in (None, ""):
-        emit("error", "Channel name can not be empty")
-    elif new_channel in channels:
-        emit("error", "Channel with this name already exists")
+    elif new_room in (None, ""):
+        emit("error", "room name can not be empty")
+    elif new_room in rooms:
+        emit("error", "room with this name already exists")
     else:
-        channels[new_channel] = {
+        rooms[new_room] = {
             "history": deque([], maxlen=LIMIT),
             "current_users": [user]
         }
 
-        switch_rooms(user, new_channel)
+        switch_rooms(user, new_room)
 
-        emit("channel created")
-        emit("new channel", new_channel, broadcast=True)
+        emit("room created")
+        emit("new room", new_room, broadcast=True)
 
 
 @socketio.on("join")
@@ -106,7 +108,7 @@ def on_join(data):
     # TODO guests are restricted
     user = data.get("user")
     room = data.get("room")
-    if room not in channels:
+    if room not in rooms:
         emit("error", "No such room")
     elif check_user(user) is False:
         return None
@@ -129,13 +131,13 @@ def send_message(data):
         "user": user,
         "text": data.get("text")
     }
-    channels[room]["history"].append(message)
+    rooms[room]["history"].append(message)
     emit("receive", message, room=room)
 
 
 def switch_rooms(user, new_room):
     last_room = users[user]["room"]
-    channels[last_room]["current_users"].remove(user)
+    rooms[last_room]["current_users"].remove(user)
     emit("notify", {"user": user, "action": "leave"}, room=last_room)
     leave_room(last_room)
     join_room(new_room)
@@ -156,9 +158,9 @@ def check_user(user, auth=False):
 
 
 def enter_live_room(user, room):
-    channels[room]["current_users"].append(user)
+    rooms[room]["current_users"].append(user)
     emit("load room", {
-        "history": list(channels[room]["history"]),
-        "users": channels[room]["current_users"]
+        "history": list(rooms[room]["history"]),
+        "users": rooms[room]["current_users"]
         })
     emit("notify", {"user": user, "action": "enter"}, room=room)

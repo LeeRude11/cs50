@@ -1,31 +1,56 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
 
-{% block title %}
-  Main Page
-{% endblock %}
+<html lang="en">
 
-{% block main %}
-  <script src="static/socket.io.js"></script>
-  <script src="static/index.js"></script>
-  <form id="register">
-    <label for="display-name">Name: </label>
-      <input type="text" id="display-name" minlength="3"
-        placeholder="Enter your display name" name="name" required />
-    <input type="submit" value="Submit">
-  </form>
-  <section id="messages">
-  </section>
-  <form id="send-message">
-    <label for="message-text">Text: </label>
-      <input type="text" id="message-text" minlength="1"
-        placeholder="Enter your message" name="name" required />
-    <input type="submit" value="Send">
-  </form>
-  <form id="create-room">
-    <label for="room-name">Create room: </label>
-      <input type="text" id="room-name" minlength="1"
-        placeholder="Enter new room name" name="name" required />
-    <input type="submit" value="Create new room">
-  </form>
-{% endblock %}
-room
+    <head>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+
+        <link href="/static/styles.css" rel="stylesheet"/>
+        <script async src="static/socket.io.js"></script>
+        <script async src="static/index.js"></script>
+        <title>SocketIO Chat</title>
+
+    </head>
+
+    <body>
+
+        <nav>
+            <span>SocketIO Chat</span>
+            |
+            <span>Entered as <span id="bar-name">Guest</span></span>
+            <div class="collapse navbar-collapse" id="navbar">
+                <ul>
+                  {% for room in rooms %}
+                    <li><a href="#">{{ room }}</a></li>
+                  {% endfor %}
+                </ul>
+            </div>
+        </nav>
+
+        <main class="container p-5">
+          <form id="register">
+            <label for="display-name">Name: </label>
+              <input type="text" id="display-name" minlength="3"
+                placeholder="Enter your display name" name="name" required />
+            <input type="submit" value="Submit">
+          </form>
+          <section id="messages">
+          </section>
+          <form id="send-message">
+            <label for="message-text">Text: </label>
+              <input type="text" id="message-text" minlength="1"
+                placeholder="Enter your message" name="name" required />
+            <input type="submit" value="Send">
+          </form>
+          <form id="create-room">
+            <label for="room-name">Create room: </label>
+              <input type="text" id="room-name" minlength="1"
+                placeholder="Enter new room name" name="name" required />
+            <input type="submit" value="Create new room">
+          </form>
+        </main>
+    </body>
+</html>

@@ -35,13 +35,15 @@ def authenticate(data):
     if user == "Guest":
         last_room = "main"
     elif check_user(user, auth=True) is False:
-        return None
+        user, last_room = "Guest", "main"
     else:
         last_room = users[user]["room"]
         users[user]["sid"] = request.sid
 
     join_room(last_room)
     enter_live_room(user, last_room)
+
+    return user
 
 
 @socketio.on("disconnect")
@@ -69,14 +71,15 @@ def register(data):
     if user == "Guest":
         emit("error", "Guest as name is not allowed")
     elif user in users:
-        emit("error", "User already exists")
+        emit("error", f"User {user} already exists")
     else:
         room = "main"
         users[user] = {"sid": request.sid, "room": room}
         rooms[room]["current_users"].remove("Guest")
         rooms[room]["current_users"].append(user)
-        emit("registered", user)
         emit("notify", {"user": user, "action": "register"}, room=room)
+        return user
+    return None
 
 
 @socketio.on("create room")
@@ -99,13 +102,16 @@ def create_room(data):
 
         switch_rooms(user, new_room)
 
-        emit("room created")
         emit("new room", new_room, broadcast=True)
+        return True
+    return None
 
 
 @socketio.on("join")
 def on_join(data):
     # TODO guests are restricted
+    # they can't be in users, so they blocked anyway
+    # emit an error for UX
     user = data.get("user")
     room = data.get("room")
     if room not in rooms:
@@ -150,8 +156,10 @@ def check_user(user, auth=False):
     elif auth:
         if users[user]["sid"] is not None:
             emit("error", "User is active")
+        else:
+            return True
     elif users[user]["sid"] != request.sid:
-        emit("error", "Wrong SID")
+        emit("error", "User is active")
     else:
         return True
     return False

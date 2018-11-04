@@ -9,8 +9,10 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
 
 LIMIT = 100
+# default room to enter
+DEF_ROOM = "main"
 # TODO current users
-rooms = {"main": {
+rooms = {DEF_ROOM: {
         "history": deque([], maxlen=LIMIT),
         "current_users": []
         }
@@ -33,9 +35,9 @@ def connect():
 def authenticate(data):
     user = data.get("username")
     if user == "Guest":
-        last_room = "main"
+        last_room = DEF_ROOM
     elif check_user(user, auth=True) is False:
-        user, last_room = "Guest", "main"
+        user, last_room = "Guest", DEF_ROOM
     else:
         last_room = users[user]["room"]
         users[user]["sid"] = request.sid
@@ -55,7 +57,7 @@ def disconnect():
         users[user]["sid"] = None
         room = users[user]["room"]
     else:
-        room = "main"
+        room = DEF_ROOM
     try:
         rooms[room]["current_users"].remove(user)
     except(ValueError):
@@ -73,7 +75,7 @@ def register(data):
     elif user in users:
         emit("error", f"User {user} already exists")
     else:
-        room = "main"
+        room = DEF_ROOM
         users[user] = {"sid": request.sid, "room": room}
         rooms[room]["current_users"].remove("Guest")
         rooms[room]["current_users"].append(user)
@@ -97,14 +99,12 @@ def create_room(data):
     else:
         rooms[new_room] = {
             "history": deque([], maxlen=LIMIT),
-            "current_users": [user]
+            "current_users": []
         }
 
         switch_rooms(user, new_room)
 
         emit("new room", new_room, broadcast=True)
-        return True
-    return None
 
 
 @socketio.on("join")
@@ -120,14 +120,13 @@ def on_join(data):
         return None
     else:
         switch_rooms(user, room)
-        enter_live_room(user, room)
 
 
 @socketio.on("send")
 def send_message(data):
     user = data.get("user")
     if user == "Guest":
-        room = "main"
+        room = DEF_ROOM
     elif check_user(user) is False:
         return None
     else:
@@ -149,6 +148,8 @@ def switch_rooms(user, new_room):
     join_room(new_room)
     users[user]["room"] = new_room
 
+    enter_live_room(user, new_room)
+
 
 def check_user(user, auth=False):
     if users.get(user) is None:
@@ -168,6 +169,7 @@ def check_user(user, auth=False):
 def enter_live_room(user, room):
     rooms[room]["current_users"].append(user)
     emit("load room", {
+        "room": room,
         "history": list(rooms[room]["history"]),
         "users": rooms[room]["current_users"]
         })

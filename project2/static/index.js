@@ -17,7 +17,7 @@ window.onload = function() {
     data.history.forEach(function(message) {
       addMessage(message)
     })
-    console.log(data.users)
+    console.log("Entered room", data.room, ", users online:", data.users)
   });
 
   document.querySelector('#register').onsubmit = function(form) {
@@ -51,11 +51,7 @@ window.onload = function() {
 
   document.querySelector('#create-room').onsubmit = function(form) {
     let name = document.querySelector('#room-name').value
-    socket.emit('create room', {name: name, user: display_name}, (data) => {
-      if (data != undefined) {
-        clearMessages()
-      }
-    });
+    socket.emit('create room', {name: name, user: display_name});
     return false
   }
 

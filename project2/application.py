@@ -64,7 +64,7 @@ def disconnect():
         print("\nNon-existing user disconnected")
         print(rooms[room]["current_users"])
         print(user, "\n")
-    emit("notify", {"user": user, "action": "disconnect"}, room=room)
+    emit("notify", {"user": user, "action": "disconnected"}, room=room)
 
 
 @socketio.on("register")
@@ -79,7 +79,7 @@ def register(data):
         users[user] = {"sid": request.sid, "room": room}
         rooms[room]["current_users"].remove("Guest")
         rooms[room]["current_users"].append(user)
-        emit("notify", {"user": user, "action": "register"}, room=room)
+        emit("notify", {"user": user, "action": "registered"}, room=room)
         return user
     return None
 
@@ -143,7 +143,7 @@ def send_message(data):
 def switch_rooms(user, new_room):
     last_room = users[user]["room"]
     rooms[last_room]["current_users"].remove(user)
-    emit("notify", {"user": user, "action": "leave"}, room=last_room)
+    emit("notify", {"user": user, "action": "left"}, room=last_room)
     leave_room(last_room)
     join_room(new_room)
     users[user]["room"] = new_room
@@ -167,10 +167,11 @@ def check_user(user, auth=False):
 
 
 def enter_live_room(user, room):
-    rooms[room]["current_users"].append(user)
     emit("load room", {
         "room": room,
         "history": list(rooms[room]["history"]),
         "users": rooms[room]["current_users"]
         })
-    emit("notify", {"user": user, "action": "enter"}, room=room)
+    # load room without the new user - he's added with notify
+    rooms[room]["current_users"].append(user)
+    emit("notify", {"user": user, "action": "entered"}, room=room)

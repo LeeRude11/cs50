@@ -21,15 +21,18 @@
             <span>SocketIO Chat</span>
             |
             <span>Entered as <span id="bar-name">Guest</span></span>
-            <div class="collapse navbar-collapse" id="navbar">
+            <div class="collapse navbar-collapse" id="rooms-list">
                 <ul>
                   {% for room in rooms %}
-                    <li><a href="#">{{ room }}</a></li>
+                    <li id="{{ room }}"><a href="#">{{ room }}</a></li>
                   {% endfor %}
                 </ul>
             </div>
         </nav>
-
+        <div id="users-list">
+          <span>Users online: </span>
+          <ul></ul>
+        </div>
         <main class="container p-5">
           <form id="register">
             <label for="display-name">Name: </label>

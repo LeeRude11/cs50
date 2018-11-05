@@ -10,7 +10,6 @@ window.onload = function() {
 
     socket.emit('authenticate', {username: display_name}, (user) => {
       document.getElementById('bar-name').textContent = user
-      // TODO remove from local storage?
     })
   });
 
@@ -22,7 +21,7 @@ window.onload = function() {
     data.users.forEach(function(user) {
       addUser(user)
     })
-    // TODO active room
+    setActiveRoom(data.room)
   });
 
   document.getElementById('register').onsubmit = function(form) {
@@ -79,7 +78,6 @@ window.onload = function() {
 
   socket.on('new room', function(room_name) {
     let new_room = document.createElement('li')
-    new_room.id = room_name
     let new_room_link = document.createElement('a')
     new_room_link.href = '#'
     new_room_link.textContent = room_name
@@ -94,6 +92,8 @@ window.onload = function() {
   })
 
   socket.on('error', function(data) {
+    // TODO if localStorage or new username are not available
+    // put the string with it in register window (for UX)
     console.log('Error: ', data)
   })
 
@@ -123,5 +123,18 @@ window.onload = function() {
     messages.removeChild(messages.firstChild)
     while (users_list.firstChild)
     users_list.removeChild(users_list.firstChild)
+  }
+
+  function setActiveRoom(room) {
+    let previous = document.querySelector('.active')
+    if (previous !== null) {
+      previous.classList.remove('active')
+    }
+    for (let room_li of rooms_list.childNodes) {
+      if (room_li.textContent === room) {
+        room_li.classList.add('active')
+        break
+      }
+    }
   }
 }

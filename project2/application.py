@@ -9,9 +9,9 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
 
 LIMIT = 100
-# default room to enter
+# default room to enter with default name
 DEF_ROOM = "main"
-# TODO current users
+DEF_NAME = "Guest"
 rooms = {DEF_ROOM: {
         "history": deque([], maxlen=LIMIT),
         "current_users": []
@@ -27,17 +27,16 @@ def index():
 
 @socketio.on("connect")
 def connect():
-    # TODO reconnecting to a restarted app causes all kinds of trouble
     pass
 
 
 @socketio.on("authenticate")
 def authenticate(data):
     user = data.get("username")
-    if user == "Guest":
+    if user == DEF_NAME:
         last_room = DEF_ROOM
     elif check_user(user, auth=True) is False:
-        user, last_room = "Guest", DEF_ROOM
+        user, last_room = DEF_NAME, DEF_ROOM
     else:
         last_room = users[user]["room"]
         users[user]["sid"] = request.sid
@@ -52,8 +51,8 @@ def authenticate(data):
 def disconnect():
     # TODO sloppy search
     user = next((k for k, v in users.items() if v["sid"] == request.sid),
-                "Guest")
-    if user != "Guest":
+                DEF_NAME)
+    if user != DEF_NAME:
         users[user]["sid"] = None
         room = users[user]["room"]
     else:
@@ -70,14 +69,15 @@ def disconnect():
 @socketio.on("register")
 def register(data):
     user = data.get("username")
+    # TODO list of inappropriate names
     if user == "Guest":
-        emit("error", "Guest as name is not allowed")
+        emit("error", {"text": "Guest as name is not allowed"})
     elif user in users:
-        emit("error", f"User {user} already exists")
+        emit("error", {"text": f"User {user} already exists"})
     else:
         room = DEF_ROOM
         users[user] = {"sid": request.sid, "room": room}
-        rooms[room]["current_users"].remove("Guest")
+        rooms[room]["current_users"].remove(DEF_NAME)
         rooms[room]["current_users"].append(user)
         emit("notify", {"user": user, "action": "registered"}, room=room)
         return user
@@ -88,34 +88,33 @@ def register(data):
 def create_room(data):
     new_room = data.get("name")
     user = data.get("user")
-    if user == "Guest":
-        emit("error", "Guests can not create rooms")
+    if user == DEF_NAME:
+        emit("error", {"text": "Guests can not create rooms"})
     elif check_user(user) is False:
         return None
     elif new_room in (None, ""):
-        emit("error", "room name can not be empty")
+        emit("error", {"text": "Room name can not be empty"})
     elif new_room in rooms:
-        emit("error", "room with this name already exists")
+        emit("error", {"text": "Room with this name already exists"})
     else:
         rooms[new_room] = {
             "history": deque([], maxlen=LIMIT),
             "current_users": []
         }
 
-        switch_rooms(user, new_room)
-
         emit("new room", new_room, broadcast=True)
+
+        switch_rooms(user, new_room)
 
 
 @socketio.on("join")
 def on_join(data):
-    # TODO guests are restricted
-    # they can't be in users, so they blocked anyway
-    # emit an error for UX
     user = data.get("user")
     room = data.get("room")
+    if user == DEF_NAME:
+        emit("error", {"text": f"Guests are restricted to {DEF_ROOM} room"})
     if room not in rooms:
-        emit("error", "No such room")
+        emit("error", {"text": "No such room"})
     elif check_user(user) is False:
         return None
     else:
@@ -125,7 +124,7 @@ def on_join(data):
 @socketio.on("send")
 def send_message(data):
     user = data.get("user")
-    if user == "Guest":
+    if user == DEF_NAME:
         room = DEF_ROOM
     elif check_user(user) is False:
         return None
@@ -152,15 +151,15 @@ def switch_rooms(user, new_room):
 
 
 def check_user(user, auth=False):
+    if auth:
+        target_sid = None
+    else:
+        target_sid = request.sid
+
     if users.get(user) is None:
-        emit("error", "No such user")
-    elif auth:
-        if users[user]["sid"] is not None:
-            emit("error", "User is active")
-        else:
-            return True
-    elif users[user]["sid"] != request.sid:
-        emit("error", "User is active")
+        emit("error", {"text": "No such user"})
+    elif users[user]["sid"] != target_sid:
+        emit("error", {"text": "User is active"})
     else:
         return True
     return False

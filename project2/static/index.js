@@ -92,8 +92,11 @@ window.onload = function() {
   })
 
   socket.on('error', function(data) {
-    // TODO if localStorage or new username are not available
-    // put the string with it in register window (for UX)
+    if (data.user) {
+      document.getElementById('display-name').value = data.user
+      console.log('Register a new username instead of ' + data.user)
+      localStorage.removeItem('username')
+    }
     console.log('Error: ', data)
   })
 

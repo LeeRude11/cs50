@@ -157,9 +157,9 @@ def check_user(user, auth=False):
         target_sid = request.sid
 
     if users.get(user) is None:
-        emit("error", {"text": "No such user"})
+        emit("error", {"text": "No such user", "user": user})
     elif users[user]["sid"] != target_sid:
-        emit("error", {"text": "User is active"})
+        emit("error", {"text": "User is active", "user": user})
     else:
         return True
     return False

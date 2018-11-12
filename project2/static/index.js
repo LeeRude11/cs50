@@ -5,6 +5,7 @@ window.onload = function() {
   var display_name = localStorage.getItem('username') || 'Guest'
   var rooms_list = document.querySelector('#rooms-list ul')
   var users_list = document.querySelector('#users-list ul')
+  var error_div = document.querySelector('#error')
 
   socket.on('connect', function() {
 
@@ -94,10 +95,12 @@ window.onload = function() {
   socket.on('error', function(data) {
     if (data.user) {
       document.getElementById('display-name').value = data.user
+      // TODO if they don't exist, it's OK to register it
       console.log('Register a new username instead of ' + data.user)
       localStorage.removeItem('username')
     }
     console.log('Error: ', data)
+    error_div.textContent = data.text
   })
 
   function addMessage(message) {

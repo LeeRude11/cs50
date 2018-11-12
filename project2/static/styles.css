@@ -1,7 +1,3 @@
-.active {
-
-}
-
 body {
   height: 95vh;
   color: #022C57;
@@ -15,7 +11,7 @@ main {
 #header > * {
   margin-left: 10px;
 }
-#banner {
+#banner, #current-room {
   font-size: 2rem;
 }
 #header-bar {
@@ -44,6 +40,9 @@ section {
 #rooms-list {
   flex: 4;
 }
+.active {
+  font-weight: bold;
+}
 #rooms-list a {
   text-decoration: none;
   color: #007DA6;
@@ -51,7 +50,7 @@ section {
 #rooms-list a:visited {
   color: #007DA6;
 }
-#rooms-list a:hover, #rooms-list a:focus {
+#rooms-list a:hover {
   color: #E4E1CF;
   background: #012D57;
 }

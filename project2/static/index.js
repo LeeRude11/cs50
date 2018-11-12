@@ -5,7 +5,7 @@ window.onload = function() {
   var display_name = localStorage.getItem('username') || 'Guest'
   var rooms_list = document.querySelector('#rooms-list ul')
   var users_list = document.querySelector('#users-list ul')
-  var error_div = document.querySelector('#error')
+  var error_div = document.getElementById('error')
 
   socket.on('connect', function() {
 
@@ -22,6 +22,7 @@ window.onload = function() {
     data.users.forEach(function(user) {
       addUser(user)
     })
+    document.getElementById('users-count').textContent = data.users.length
     setActiveRoom(data.room)
   });
 
@@ -110,12 +111,14 @@ window.onload = function() {
   }
 
   function addUser(user) {
+    document.getElementById('users-count').textContent++
     let new_user = document.createElement('li')
     new_user.textContent = user
     users_list.appendChild(new_user)
   }
 
   function removeUser(user) {
+    document.getElementById('users-count').textContent--
     for (let user_li of users_list.childNodes) {
       if (user_li.textContent === user) {
         users_list.removeChild(user_li)
@@ -136,6 +139,7 @@ window.onload = function() {
     if (previous !== null) {
       previous.classList.remove('active')
     }
+    document.getElementById('current-room').textContent = room
     for (let room_li of rooms_list.childNodes) {
       if (room_li.textContent === room) {
         room_li.classList.add('active')

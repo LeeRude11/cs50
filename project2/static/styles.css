@@ -1,3 +1,96 @@
 .active {
-  background: cyan;
+
+}
+
+body {
+  height: 95vh;
+  color: #022C57;
+  background: #007DA6;
+}
+main {
+  height: inherit;
+  display: flex;
+}
+
+#header > * {
+  margin-left: 10px;
+}
+#banner {
+  font-size: 2rem;
+}
+#header-bar {
+}
+#bar-name {
+  font-weight: 600;
+}
+
+section > * {
+  background: #E4E1CF;
+  margin-bottom: 30px;
+  padding: 10px;
+  border-radius: 20px;
+  box-shadow: 10px 8px 1px #012D57;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  margin: 25px;
+}
+
+#left-column {
+  flex: 1;
+}
+#rooms-list {
+  flex: 4;
+}
+#rooms-list a {
+  text-decoration: none;
+  color: #007DA6;
+}
+#rooms-list a:visited {
+  color: #007DA6;
+}
+#rooms-list a:hover, #rooms-list a:focus {
+  color: #E4E1CF;
+  background: #012D57;
+}
+#middle-column {
+  flex: 4 80%;
+}
+#messages-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+#error {
+  background: #FD2B2E;
+  color: #E4E1CF;
+  font-weight: bold;
+  border-radius: 20px 20px 0px 0px;
+  padding: 15px;
+  margin: -10px -10px 10px -10px;
+}
+#messages {
+  flex: 1;
+}
+#send-message {
+}
+#send-message > * {
+  height: 4rem;
+}
+#send-message button {
+  border: none;
+  width: 5%;
+  color: #022C57;
+  background: #007DA6;
+}
+#message-text {
+  width: 90%;
+  border: none;
+  border-left: 4px solid #007DA6;
+}
+
+#right-column {
+  flex: 1 20%;
 }

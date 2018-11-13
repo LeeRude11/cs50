@@ -103,9 +103,12 @@ window.onload = function() {
       console.log('Register a new username instead of ' + data.user)
       localStorage.removeItem('username')
     }
-    console.log('Error: ', data)
-    error_div.textContent = data.text
+    flashError(data.text)
   })
+
+  document.getElementById('error-button').onclick = () => {
+    error_div.hidden = true
+  }
 
   function addMessage(message) {
     let new_message = document.createElement('div')
@@ -149,5 +152,11 @@ window.onload = function() {
         break
       }
     }
+  }
+
+  function flashError(text) {
+    var error_text = document.getElementById('error-text')
+    error_text.textContent = 'Error: ' + text
+    error_div.hidden = false
   }
 }

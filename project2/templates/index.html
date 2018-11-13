@@ -46,7 +46,10 @@
           </section>
           <section id="middle-column">
             <div id="messages-container">
-              <div id="error">Errors come here</div>
+              <div id="error" hidden>
+                <span id="error-text">Errors come here</span>
+                <button id="error-button">Dismiss</button>
+              </div>
               <div id="messages"></div>
               <form id="send-message">
                 <input type="text" id="message-text" minlength="1" autocomplete="off"

@@ -28,19 +28,29 @@ window.onload = function() {
 
   document.getElementById('register').onsubmit = function(form) {
     let form_name = document.getElementById('display-name').value
-    socket.emit('register', {username: form_name}, (user) => {
-      if (user != undefined) {
-        localStorage.setItem('username', user)
-        display_name = user
-        document.getElementById('bar-name').textContent = user
-      }
-    });
+    if (isEmpty(form_name)) {
+      flashError('Username can not be empty')
+    } else {
+      socket.emit('register', {username: form_name}, (user) => {
+        if (user != undefined) {
+          localStorage.setItem('username', user)
+          display_name = user
+          document.getElementById('bar-name').textContent = user
+        }
+      });
+    }
     return false
   }
 
   document.getElementById('send-message').onsubmit = function(form) {
     let text = document.getElementById('message-text').value
-    socket.emit('send', {user: display_name, text: text});
+    document.getElementById('message-text').value = ""
+    if (isEmpty(text)) {
+      flashError('Can not send an empty message')
+    }
+    else {
+      socket.emit('send', {user: display_name, text: text});
+    }
     return false
   }
 
@@ -50,6 +60,7 @@ window.onload = function() {
 
   socket.on('notify', function(data) {
     let user = data.user
+    // TODO notify CSS
     let message = {
       user: "ROOM",
       text: "User " + user + " has " + data.action + "."
@@ -77,7 +88,12 @@ window.onload = function() {
 
   document.getElementById('create-room').onsubmit = function(form) {
     let name = document.getElementById('room-name').value
-    socket.emit('create room', {name: name, user: display_name});
+    if (isEmpty(name)) {
+      flashError('Room name can not be empty')
+    }
+    else {
+      socket.emit('create room', {name: name, user: display_name});
+    }
     return false
   }
 
@@ -158,5 +174,9 @@ window.onload = function() {
     var error_text = document.getElementById('error-text')
     error_text.textContent = 'Error: ' + text
     error_div.hidden = false
+  }
+  // https://stackoverflow.com/a/28485815
+  function isEmpty(str){
+    return !str.replace(/\s+/, '').length;
   }
 }

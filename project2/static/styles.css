@@ -80,6 +80,7 @@ section {
 }
 #messages {
   flex: 1;
+  word-break: break-all;
 }
 #send-message {
 }

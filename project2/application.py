@@ -112,9 +112,11 @@ def on_join(data):
     user = data.get("user")
     room = data.get("room")
     if user == DEF_NAME:
-        emit("error", {"text": f"Guests are restricted to {DEF_ROOM} room"})
-    if room not in rooms:
+        emit("error", {"text": f"Guests can not change rooms"})
+    elif room not in rooms:
         emit("error", {"text": "No such room"})
+    elif room == users[user]["room"]:
+        emit("error", {"text": "Already joined this room"})
     elif check_user(user) is False:
         return None
     else:
@@ -142,8 +144,8 @@ def send_message(data):
 def switch_rooms(user, new_room):
     last_room = users[user]["room"]
     rooms[last_room]["current_users"].remove(user)
-    emit("notify", {"user": user, "action": "left"}, room=last_room)
     leave_room(last_room)
+    emit("notify", {"user": user, "action": "left"}, room=last_room)
     join_room(new_room)
     users[user]["room"] = new_room
 

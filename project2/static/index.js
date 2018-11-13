@@ -68,6 +68,9 @@ window.onload = function() {
 
   rooms_list.querySelectorAll('a').forEach(function(room) {
     room.addEventListener('click', function(){
+      if (room.textContent == document.querySelector('.active').textContent) {
+        return
+      }
       socket.emit('join', {user: display_name, room: room.textContent})
     })
   })

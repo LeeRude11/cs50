@@ -1,8 +1,10 @@
 window.onload = function() {
   var socket = io.connect('http://' + document.domain + ':' + location.port);
 
+  var DEF_NAME = 'Guest'
+  var display_name = localStorage.getItem('username') || DEF_NAME
+
   var messages = document.getElementById('messages')
-  var display_name = localStorage.getItem('username') || 'Guest'
   var rooms_list = document.querySelector('#rooms-list ul')
   var users_list = document.querySelector('#users-list ul')
   var error_div = document.getElementById('error')
@@ -10,7 +12,8 @@ window.onload = function() {
   socket.on('connect', function() {
 
     socket.emit('authenticate', {username: display_name}, (user) => {
-      document.getElementById('bar-name').textContent = user
+      document.getElementById('bar-name').textContent = display_name = user
+      toggleForm()
     })
   });
 
@@ -34,8 +37,8 @@ window.onload = function() {
       socket.emit('register', {username: form_name}, (user) => {
         if (user != undefined) {
           localStorage.setItem('username', user)
-          display_name = user
-          document.getElementById('bar-name').textContent = user
+          document.getElementById('bar-name').textContent = display_name = user
+          toggleForm()
         }
       });
     }
@@ -72,7 +75,7 @@ window.onload = function() {
       removeUser(user)
     } else {
       // "registered"
-      removeUser("Guest")
+      removeUser(DEF_NAME)
       addUser(user)
     }
   })
@@ -168,6 +171,11 @@ window.onload = function() {
         break
       }
     }
+  }
+
+  function toggleForm() {
+    document.getElementById('register').hidden = display_name !== DEF_NAME
+    document.getElementById('create-room').hidden = display_name === DEF_NAME
   }
 
   function flashError(text) {

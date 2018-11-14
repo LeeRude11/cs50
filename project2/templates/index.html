@@ -21,7 +21,9 @@
           <section id="left-column">
             <div id="header">
               <div id="banner">SocketIO Chat</div>
-              <div id="header-bar">Entered as <span id="bar-name">Guest</span></div>
+              <div id="header-bar">
+                Entered as <span id="bar-name">Guest</span><a id="exit" href="#" hidden>(exit)</a>
+              </div>
             </div>
             <form id="register" hidden>
               <label for="display-name">Name: </label>
@@ -46,9 +48,12 @@
           </section>
           <section id="middle-column">
             <div id="messages-container">
-              <div id="error" hidden>
+              <div id="error" class="alert" hidden>
                 <span id="error-text">Errors come here</span>
                 <button id="error-button">Dismiss</button>
+              </div>
+              <div id="confirmation" class="alert" hidden>
+                <span>Exit and delete your username?</span><button id="confirm-no">No</button><button id="confirm-yes">Yes</button>
               </div>
               <div id="messages"></div>
               <form id="send-message">

@@ -1,7 +1,7 @@
 window.onload = function() {
   var socket = io.connect('http://' + document.domain + ':' + location.port);
 
-  var DEF_NAME = 'Guest'
+  const DEF_NAME = 'Guest'
   var display_name = localStorage.getItem('username') || DEF_NAME
 
   var messages = document.getElementById('messages')
@@ -12,8 +12,7 @@ window.onload = function() {
   socket.on('connect', function() {
 
     socket.emit('authenticate', {username: display_name}, (user) => {
-      document.getElementById('bar-name').textContent = display_name = user
-      toggleForm()
+      setUser(user)
     })
   });
 
@@ -37,8 +36,7 @@ window.onload = function() {
       socket.emit('register', {username: form_name}, (user) => {
         if (user != undefined) {
           localStorage.setItem('username', user)
-          document.getElementById('bar-name').textContent = display_name = user
-          toggleForm()
+          setUser(user)
         }
       });
     }
@@ -63,7 +61,6 @@ window.onload = function() {
 
   socket.on('notify', function(data) {
     let user = data.user
-    // TODO notify CSS
     let message = {
       user: "ROOM",
       text: "User " + user + " has " + data.action + "."
@@ -125,6 +122,23 @@ window.onload = function() {
     flashError(data.text)
   })
 
+  var confirm_div = document.getElementById('confirmation')
+  document.getElementById('exit').onclick = () => {
+    confirm_div.hidden = false
+  }
+  document.getElementById('confirm-yes').onclick = () => {
+    confirm_div.hidden = true
+    socket.emit('delete user', {user: display_name}, (response) => {
+      if (response === true) {
+        localStorage.removeItem('username')
+        setUser(DEF_NAME)
+      }
+    })
+  }
+  document.getElementById('confirm-no').onclick = () => {
+    confirm_div.hidden = true
+  }
+
   document.getElementById('error-button').onclick = () => {
     error_div.hidden = true
   }
@@ -173,8 +187,14 @@ window.onload = function() {
     }
   }
 
+  function setUser(user) {
+    document.getElementById('bar-name').textContent = display_name = user
+    toggleForm()
+  }
+
   function toggleForm() {
     document.getElementById('register').hidden = display_name !== DEF_NAME
+    document.getElementById('exit').hidden = display_name === DEF_NAME
     document.getElementById('create-room').hidden = display_name === DEF_NAME
   }
 

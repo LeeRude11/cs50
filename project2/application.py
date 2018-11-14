@@ -112,13 +112,13 @@ def on_join(data):
     user = data.get("user")
     room = data.get("room")
     if user == DEF_NAME:
-        emit("error", {"text": f"Guests can not change rooms"})
+        emit("error", {"text": "Guests can not change rooms"})
     elif room not in rooms:
         emit("error", {"text": "No such room"})
-    elif room == users[user]["room"]:
-        emit("error", {"text": "Already joined this room"})
     elif check_user(user) is False:
         return None
+    elif room == users[user]["room"]:
+        emit("error", {"text": "Already joined this room"})
     else:
         switch_rooms(user, room)
 
@@ -139,6 +139,27 @@ def send_message(data):
     }
     rooms[room]["history"].append(message)
     emit("receive", message, room=room)
+
+
+@socketio.on("delete user")
+def delete_user(data):
+    user = data.get("user")
+    if check_user(user) is False:
+        return None
+    room = users[user]["room"]
+    users.pop(user)
+    rooms[room]["current_users"].remove(user)
+
+    emit("notify", {"user": user, "action": "left"}, room=room)
+
+    # don't reload if user is here
+    if room == DEF_ROOM:
+        emit("notify", {"user": DEF_NAME, "action": "entered"}, room=room)
+    else:
+        leave_room(room)
+        join_room(DEF_ROOM)
+        enter_live_room(DEF_NAME, DEF_ROOM)
+    return True
 
 
 def switch_rooms(user, new_room):

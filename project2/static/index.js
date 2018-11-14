@@ -5,7 +5,6 @@ window.onload = function() {
   var display_name = localStorage.getItem('username') || DEF_NAME
 
   var messages = document.getElementById('messages')
-  var rooms_list = document.querySelector('#rooms-list ul')
   var users_list = document.querySelector('#users-list ul')
   var error_div = document.getElementById('error')
 
@@ -15,6 +14,15 @@ window.onload = function() {
       setUser(user)
     })
   });
+
+  var rooms_list = document.querySelector('#rooms-list ul')
+  socket.on('load list of rooms', function(list_of_rooms) {
+    while (rooms_list.firstChild)
+      rooms_list.removeChild(rooms_list.firstChild)
+    list_of_rooms.forEach((room) => {
+      addRoom(room)
+    })
+  })
 
   socket.on('load room', function(data) {
     clearRoom()
@@ -85,15 +93,6 @@ window.onload = function() {
     }
   })
 
-  rooms_list.querySelectorAll('a').forEach(function(room) {
-    room.addEventListener('click', function(){
-      if (room.textContent == document.querySelector('.active').textContent) {
-        return
-      }
-      socket.emit('join', {user: display_name, room: room.textContent})
-    })
-  })
-
   document.getElementById('create-room').onsubmit = function(form) {
     let name = document.getElementById('room-name').value
     if (isEmpty(name)) {
@@ -110,18 +109,7 @@ window.onload = function() {
   }
 
   socket.on('new room', function(room_name) {
-    let new_room = document.createElement('li')
-    let new_room_link = document.createElement('a')
-    new_room_link.href = '#'
-    new_room_link.textContent = room_name
-    new_room_link.addEventListener('click', function(){
-      socket.emit('join', {
-        user: display_name,
-        room: room_name
-      })
-    })
-    new_room.appendChild(new_room_link)
-    rooms_list.appendChild(new_room)
+    addRoom(room_name)
   })
 
   socket.on('error', function(data) {
@@ -187,6 +175,21 @@ window.onload = function() {
     messages.removeChild(messages.firstChild)
     while (users_list.firstChild)
     users_list.removeChild(users_list.firstChild)
+  }
+
+  function addRoom(room_name) {
+    let new_room = document.createElement('li')
+    let new_room_link = document.createElement('a')
+    new_room_link.href = '#'
+    new_room_link.textContent = room_name
+    new_room_link.addEventListener('click', () => {
+      if (new_room_link.textContent == document.querySelector('.active').textContent) {
+        return
+      }
+      socket.emit('join', {user: display_name, room: room_name})
+    })
+    new_room.appendChild(new_room_link)
+    rooms_list.appendChild(new_room)
   }
 
   function setActiveRoom(room) {

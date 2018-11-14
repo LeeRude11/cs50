@@ -27,7 +27,7 @@ def index():
 
 @socketio.on("connect")
 def connect():
-    pass
+    emit("load list of rooms", list(rooms.keys()))
 
 
 @socketio.on("authenticate")

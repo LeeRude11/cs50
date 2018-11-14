@@ -53,16 +53,11 @@ def disconnect():
                 DEF_NAME)
     if user != DEF_NAME:
         users[user]["sid"] = None
-        room = users[user]["room"]
-    else:
-        room = DEF_ROOM
     try:
-        rooms[room]["current_users"].remove(user)
+        leave_current_room(user, action="disconnected")
     except(ValueError):
+        # TODO DEF_NAME?
         print("\nNon-existing user disconnected")
-        print(rooms[room]["current_users"])
-        print(user, "\n")
-    emit("notify", {"user": user, "action": "disconnected"}, room=room)
 
 
 @socketio.on("register")
@@ -145,28 +140,16 @@ def delete_user(data):
     user = data.get("user")
     if check_user(user) is False:
         return None
-    room = users[user]["room"]
+
+    leave_current_room(user)
     users.pop(user)
-    rooms[room]["current_users"].remove(user)
-
-    emit("notify", {"user": user, "action": "left"}, room=room)
-
-    # don't reload if user is here
-    if room == DEF_ROOM:
-        emit("notify", {"user": DEF_NAME, "action": "entered"}, room=room)
-    else:
-        leave_room(room)
-        enter_live_room(DEF_NAME, DEF_ROOM)
+    enter_live_room(DEF_NAME, DEF_ROOM)
     return True
 
 
 def switch_rooms(user, new_room):
-    last_room = users[user]["room"]
-    rooms[last_room]["current_users"].remove(user)
-    leave_room(last_room)
-    emit("notify", {"user": user, "action": "left"}, room=last_room)
+    leave_current_room(user)
     users[user]["room"] = new_room
-
     enter_live_room(user, new_room)
 
 
@@ -183,6 +166,18 @@ def check_user(user, auth=False):
     else:
         return True
     return False
+
+
+def leave_current_room(user, action="left"):
+    try:
+        room = users[user]["room"]
+    except(KeyError):
+        # DEF_USER
+        room = DEF_ROOM
+
+    rooms[room]["current_users"].remove(user)
+    leave_room(room)
+    emit("notify", {"user": user, "action": action}, room=room)
 
 
 def enter_live_room(user, room):

@@ -41,7 +41,6 @@ def authenticate(data):
         last_room = users[user]["room"]
         users[user]["sid"] = request.sid
 
-    join_room(last_room)
     enter_live_room(user, last_room)
 
     return user
@@ -157,7 +156,6 @@ def delete_user(data):
         emit("notify", {"user": DEF_NAME, "action": "entered"}, room=room)
     else:
         leave_room(room)
-        join_room(DEF_ROOM)
         enter_live_room(DEF_NAME, DEF_ROOM)
     return True
 
@@ -167,7 +165,6 @@ def switch_rooms(user, new_room):
     rooms[last_room]["current_users"].remove(user)
     leave_room(last_room)
     emit("notify", {"user": user, "action": "left"}, room=last_room)
-    join_room(new_room)
     users[user]["room"] = new_room
 
     enter_live_room(user, new_room)
@@ -189,6 +186,7 @@ def check_user(user, auth=False):
 
 
 def enter_live_room(user, room):
+    join_room(room)
     emit("load room", {
         "room": room,
         "history": list(rooms[room]["history"]),

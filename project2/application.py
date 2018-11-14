@@ -132,7 +132,8 @@ def send_message(data):
         "text": data.get("text")
     }
     rooms[room]["history"].append(message)
-    emit("receive", message, room=room)
+    emit("receive", message, room=room, include_self=False)
+    return True
 
 
 @socketio.on("delete user")
@@ -154,6 +155,7 @@ def switch_rooms(user, new_room):
 
 
 def check_user(user, auth=False):
+    # TODO guest? OK then
     if auth:
         target_sid = None
     else:

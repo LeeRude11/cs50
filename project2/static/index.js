@@ -50,7 +50,14 @@ window.onload = function() {
       flashError('Can not send an empty message')
     }
     else {
-      socket.emit('send', {user: display_name, text: text});
+      message = {user: display_name, text: text}
+      let pending_message = addMessage(message, pending=true)
+      socket.emit('send', message, (response) => {
+        pending_message.classList.remove('pending')
+        if (response !== true) {
+          pending_message.classList.add('failed')
+        }
+      });
     }
     return false
   }
@@ -143,10 +150,14 @@ window.onload = function() {
     error_div.hidden = true
   }
 
-  function addMessage(message) {
+  function addMessage(message, pending=false) {
     let new_message = document.createElement('div')
     new_message.textContent = message['user'] + ": " + message['text']
     messages.appendChild(new_message)
+    if (pending) {
+      new_message.classList.add('pending')
+      return new_message
+    }
   }
 
   function addUser(user) {

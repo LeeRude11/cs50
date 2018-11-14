@@ -33,10 +33,11 @@ window.onload = function() {
     if (isEmpty(form_name)) {
       flashError('Username can not be empty')
     } else {
-      socket.emit('register', {username: form_name}, (user) => {
-        if (user != undefined) {
-          localStorage.setItem('username', user)
-          setUser(user)
+      socket.emit('register', {username: form_name}, (response) => {
+        if (response === true) {
+          localStorage.setItem('username', form_name)
+          setUser(form_name)
+          document.getElementById('display-name').value = ""
         }
       });
     }
@@ -99,7 +100,11 @@ window.onload = function() {
       flashError('Room name can not be empty')
     }
     else {
-      socket.emit('create room', {name: name, user: display_name});
+      socket.emit('create room', {name: name, user: display_name}, (response) => {
+          if (response === true)
+            document.getElementById('room-name').value = ""
+        }
+      );
     }
     return false
   }

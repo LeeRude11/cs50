@@ -74,7 +74,7 @@ def register(data):
         rooms[room]["current_users"].remove(DEF_NAME)
         rooms[room]["current_users"].append(user)
         emit("notify", {"user": user, "action": "registered"}, room=room)
-        return user
+        return True
     return None
 
 
@@ -95,10 +95,9 @@ def create_room(data):
             "history": deque([], maxlen=LIMIT),
             "current_users": []
         }
-
         emit("new room", new_room, broadcast=True)
-
         switch_rooms(user, new_room)
+        return True
 
 
 @socketio.on("join")

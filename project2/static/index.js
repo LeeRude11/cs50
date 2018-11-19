@@ -114,9 +114,8 @@ window.onload = function() {
 
   socket.on('error', function(data) {
     if (data.user) {
+      data.text += ": " + data.user + ". Your name has been set to Guest"
       document.getElementById('display-name').value = data.user
-      // TODO if they don't exist, it's OK to register it
-      console.log('Register a new username instead of ' + data.user)
       localStorage.removeItem('username')
     }
     flashError(data.text)

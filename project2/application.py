@@ -53,11 +53,7 @@ def disconnect():
                 DEF_NAME)
     if user != DEF_NAME:
         users[user]["sid"] = None
-    try:
-        leave_current_room(user, action="disconnected")
-    except(ValueError):
-        # TODO DEF_NAME?
-        print("\nNon-existing user disconnected")
+    leave_current_room(user, action="disconnected")
 
 
 @socketio.on("register")
@@ -82,9 +78,8 @@ def register(data):
 def create_room(data):
     new_room = data.get("name")
     user = data.get("user")
-    if user == DEF_NAME:
-        emit("error", {"text": "Guests can not create rooms"})
-    elif check_user(user) is False:
+
+    if check_user(user, guest_error="Guests can not create rooms") is False:
         return None
     elif new_room in (None, ""):
         emit("error", {"text": "Room name can not be empty"})
@@ -104,12 +99,10 @@ def create_room(data):
 def on_join(data):
     user = data.get("user")
     room = data.get("room")
-    if user == DEF_NAME:
-        emit("error", {"text": "Guests can not change rooms"})
+    if check_user(user, guest_error="Guests can not change rooms") is False:
+        return None
     elif room not in rooms:
         emit("error", {"text": "No such room"})
-    elif check_user(user) is False:
-        return None
     elif room == users[user]["room"]:
         emit("error", {"text": "Already joined this room"})
     else:
@@ -138,7 +131,8 @@ def send_message(data):
 @socketio.on("delete user")
 def delete_user(data):
     user = data.get("user")
-    if check_user(user) is False:
+
+    if check_user(user, guest_error="Guests can not be deleted") is False:
         return None
 
     leave_current_room(user)
@@ -153,17 +147,18 @@ def switch_rooms(user, new_room):
     enter_live_room(user, new_room)
 
 
-def check_user(user, auth=False):
-    # TODO guest? OK then
+def check_user(user, auth=False, guest_error=False):
     if auth:
         target_sid = None
     else:
         target_sid = request.sid
 
-    if users.get(user) is None:
-        emit("error", {"text": "No such user", "user": user})
+    if guest_error and user == DEF_NAME:
+        emit("error", {"text": guest_error})
+    elif users.get(user) is None:
+        emit("error", {"text": "Your username was not found", "user": user})
     elif users[user]["sid"] != target_sid:
-        emit("error", {"text": "User is active", "user": user})
+        emit("error", {"text": "User already in active session", "user": user})
     else:
         return True
     return False
@@ -173,10 +168,14 @@ def leave_current_room(user, action="left"):
     try:
         room = users[user]["room"]
     except(KeyError):
-        # DEF_USER
+        # DEF_NAME
         room = DEF_ROOM
+    try:
+        rooms[room]["current_users"].remove(user)
+    except(ValueError):
+        # TODO DEF_NAME?
+        print("\nNon-existing user disconnected")
 
-    rooms[room]["current_users"].remove(user)
     leave_room(room)
     emit("notify", {"user": user, "action": action}, room=room)
 

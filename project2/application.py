@@ -17,12 +17,12 @@ rooms = {DEF_ROOM: {
         "current_users": []
         }
     }
-users = {}
+users = {DEF_NAME: {"sid": None, "room": DEF_ROOM}}
 
 
 @app.route("/")
 def index():
-    return render_template("index.html", rooms=rooms.keys())
+    return render_template("index.html")
 
 
 @socketio.on("connect")
@@ -33,13 +33,12 @@ def connect():
 @socketio.on("authenticate")
 def authenticate(data):
     user = data.get("username")
-    if user == DEF_NAME:
-        last_room = DEF_ROOM
-    elif check_user(user, auth=True) is False:
-        user, last_room = DEF_NAME, DEF_ROOM
-    else:
-        last_room = users[user]["room"]
+
+    if check_user(user, auth=True, guest_error=None) is False:
+        user = DEF_NAME
+    if user != DEF_NAME:
         users[user]["sid"] = request.sid
+    last_room = users[user]["room"]
 
     enter_live_room(user, last_room)
 
@@ -60,7 +59,7 @@ def disconnect():
 def register(data):
     user = data.get("username")
     # TODO list of inappropriate names
-    if user == "Guest":
+    if user == DEF_NAME:
         emit("error", {"text": "Guest as name is not allowed"})
     elif user in users:
         emit("error", {"text": f"User {user} already exists"})
@@ -112,9 +111,7 @@ def on_join(data):
 @socketio.on("send")
 def send_message(data):
     user = data.get("user")
-    if user == DEF_NAME:
-        room = DEF_ROOM
-    elif check_user(user) is False:
+    if check_user(user, guest_error=None) is False:
         return None
     else:
         room = users[user]["room"]
@@ -147,14 +144,18 @@ def switch_rooms(user, new_room):
     enter_live_room(user, new_room)
 
 
-def check_user(user, auth=False, guest_error=False):
+def check_user(user, auth=False, guest_error="Not allowed"):
     if auth:
         target_sid = None
     else:
         target_sid = request.sid
 
-    if guest_error and user == DEF_NAME:
-        emit("error", {"text": guest_error})
+    if user == DEF_NAME:
+        if guest_error:
+            emit("error", {"text": guest_error})
+        # some functions accept guest users
+        else:
+            return True
     elif users.get(user) is None:
         emit("error", {"text": "Your username was not found", "user": user})
     elif users[user]["sid"] != target_sid:
@@ -165,16 +166,12 @@ def check_user(user, auth=False, guest_error=False):
 
 
 def leave_current_room(user, action="left"):
-    try:
-        room = users[user]["room"]
-    except(KeyError):
-        # DEF_NAME
-        room = DEF_ROOM
+    room = users[user]["room"]
     try:
         rooms[room]["current_users"].remove(user)
     except(ValueError):
-        # TODO DEF_NAME?
-        print("\nNon-existing user disconnected")
+        print("\nUser disconnected before authorization")
+        return
 
     leave_room(room)
     emit("notify", {"user": user, "action": action}, room=room)

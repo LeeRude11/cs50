@@ -60,7 +60,7 @@ window.onload = function() {
     }
     else {
       message = {user: display_name, text: text}
-      let pending_message = addMessage(message, pending=true)
+      let pending_message = addMessage(message, {'pending': true})
       socket.emit('send', message, (response) => {
         pending_message.classList.remove('pending')
         if (response !== true) {
@@ -78,10 +78,10 @@ window.onload = function() {
   socket.on('notify', function(data) {
     let user = data.user
     let message = {
-      user: "ROOM",
-      text: "User " + user + " has " + data.action + "."
+      user: "User " + user,
+      text: "has " + data.action + "."
     }
-    addMessage(message)
+    addMessage(message, {'notify': true})
     if (data.action === "entered") {
       addUser(user)
     } else if (["left", "disconnected"].includes(data.action)) {
@@ -142,11 +142,16 @@ window.onload = function() {
     error_div.hidden = true
   }
 
-  function addMessage(message, pending=false) {
+  function addMessage(message, params) {
     let new_message = document.createElement('div')
-    new_message.textContent = message['user'] + ": " + message['text']
+    let symbol = ': '
+    if (params.notify) {
+      symbol = ' '
+      new_message.classList.add('notify')
+    }
+    new_message.textContent = message['user'] + symbol + message['text']
     messages.appendChild(new_message)
-    if (pending) {
+    if (params.pending) {
       new_message.classList.add('pending')
       return new_message
     }

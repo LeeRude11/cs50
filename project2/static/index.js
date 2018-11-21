@@ -17,8 +17,9 @@ window.onload = function() {
 
   var rooms_list = document.querySelector('#rooms-list ul')
   socket.on('load list of rooms', function(list_of_rooms) {
-    while (rooms_list.firstChild)
+    while (rooms_list.firstChild) {
       rooms_list.removeChild(rooms_list.firstChild)
+    }
     list_of_rooms.forEach((room) => {
       addRoom(room)
     })
@@ -36,7 +37,7 @@ window.onload = function() {
     setActiveRoom(data.room)
   });
 
-  document.getElementById('register').onsubmit = function(form) {
+  document.getElementById('register').onsubmit = () => {
     let form_name = document.getElementById('display-name').value
     if (isEmpty(form_name)) {
       flashError('Username can not be empty')
@@ -52,21 +53,25 @@ window.onload = function() {
     return false
   }
 
-  document.getElementById('send-message').onsubmit = function(form) {
+  document.getElementById('send-message').onsubmit = () => {
     let text = document.getElementById('message-text').value
     document.getElementById('message-text').value = ""
     if (isEmpty(text)) {
       flashError('Can not send an empty message')
     }
     else {
-      message = {user: display_name, text: text}
-      let pending_message = addMessage(message, {'pending': true})
-      socket.emit('send', message, (response) => {
-        pending_message.classList.remove('pending')
-        if (response !== true) {
-          pending_message.classList.add('failed')
-        }
-      });
+      let message = {user: display_name, text: text}
+      let pending_message = addMessage(message)
+      if (socket.disconnected) {
+        pending_message.classList.add('failed')
+      }
+      else {
+        socket.emit('send', message, (response) => {
+          if (response !== true) {
+            pending_message.classList.add('failed')
+          }
+        });
+      }
     }
     return false
   }
@@ -93,7 +98,7 @@ window.onload = function() {
     }
   })
 
-  document.getElementById('create-room').onsubmit = function(form) {
+  document.getElementById('create-room').onsubmit = () => {
     let name = document.getElementById('room-name').value
     if (isEmpty(name)) {
       flashError('Room name can not be empty')
@@ -143,18 +148,16 @@ window.onload = function() {
   }
 
   function addMessage(message, params) {
+    params = params || {}
     let new_message = document.createElement('div')
     let symbol = ': '
-    if (params.notify) {
+    if (params.notify !== undefined) {
       symbol = ' '
       new_message.classList.add('notify')
     }
     new_message.textContent = message['user'] + symbol + message['text']
     messages.appendChild(new_message)
-    if (params.pending) {
-      new_message.classList.add('pending')
-      return new_message
-    }
+    return new_message
   }
 
   function addUser(user) {
@@ -187,7 +190,7 @@ window.onload = function() {
     new_room_link.href = '#'
     new_room_link.textContent = room_name
     new_room_link.addEventListener('click', () => {
-      if (new_room_link.textContent == document.querySelector('.active').textContent) {
+      if (new_room_link.textContent === document.querySelector('.active').textContent) {
         return
       }
       socket.emit('join', {user: display_name, room: room_name})

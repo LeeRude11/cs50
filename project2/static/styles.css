@@ -35,7 +35,6 @@ section {
   flex: 1;
 }
 #rooms-list {
-  flex: 4;
 }
 .active {
   font-weight: bold;
@@ -54,22 +53,14 @@ section {
 #middle-column {
   flex: 4 80%;
 }
-#messages-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
 .alert {
   font-weight: bold;
-  border-radius: 20px 20px 0px 0px;
-  padding: 15px;
-  margin: -20px -20px 10px -20px;
 }
 #error {
   background: #FD2B2E;
   color: #E4E1CF;
 }
-#confirmation {
+.caution {
   background: #FFAE31;
 }
 #confirm-no, #confirm-yes {
@@ -88,7 +79,11 @@ section {
 }
 #messages {
   flex: 1;
+  overflow: auto;
   word-break: break-all;
+}
+#messages div:last-child {
+  margin-bottom: 10px;
 }
 .failed {
   border-left: 3px solid #FD2B2E;
@@ -103,6 +98,13 @@ section {
 .notify {
   border-left: 3px solid #007DA6;
   padding-left: 5px;
+}
+#message-notice {
+  padding: 0;
+  border-radius: 0 0 0 20px;
+  line-height: 20px;
+  text-align: center;
+  margin-top: -50px;
 }
 
 }

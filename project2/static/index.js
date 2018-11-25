@@ -2,6 +2,7 @@ window.onload = function() {
   var socket = io.connect('http://' + document.domain + ':' + location.port);
 
   const DEF_NAME = 'Guest'
+  const MSG_LIMIT = 100
   var display_name = localStorage.getItem('username') || DEF_NAME
 
   var messages = document.getElementById('messages')
@@ -86,7 +87,7 @@ window.onload = function() {
       user: "User " + user,
       text: "has " + data.action + "."
     }
-    addMessage(message, {'notify': true})
+    addMessage(message, true)
     if (data.action === "entered") {
       addUser(user)
     } else if (["left", "disconnected"].includes(data.action)) {
@@ -147,16 +148,17 @@ window.onload = function() {
     error_div.hidden = true
   }
 
-  function addMessage(message, params) {
-    params = params || {}
+  function addMessage(message, notify) {
+    keepWithinLimit()
     let new_message = document.createElement('div')
     let symbol = ': '
-    if (params.notify !== undefined) {
+    if (notify !== undefined) {
       symbol = ' '
       new_message.classList.add('notify')
     }
     new_message.textContent = message['user'] + symbol + message['text']
     messages.appendChild(new_message)
+    newMessageNotify()
     return new_message
   }
 
@@ -229,6 +231,33 @@ window.onload = function() {
     error_text.textContent = 'Error: ' + text
     error_div.hidden = false
   }
+
+  function keepWithinLimit() {
+    while (messages.childNodes.length > MSG_LIMIT) {
+      messages.removeChild(messages.firstChild)
+    }
+  }
+
+  function newMessageNotify() {
+    var scrollTopMax = () => {
+      return messages.scrollHeight - messages.clientHeight
+    }
+    var closeToBottom = () => {
+      return messages.scrollTop + 50 > scrollTopMax()
+    }
+
+    if (closeToBottom()) {
+      messages.scrollTop = scrollTopMax()
+    } else {
+      var notice = document.getElementById('message-notice')
+      notice.hidden = false
+      messages.addEventListener('scroll', () => {
+        if (closeToBottom()) {
+          notice.hidden = true
+        }
+      })
+    }
+  };
   // https://stackoverflow.com/a/28485815
   function isEmpty(str){
     return !str.replace(/\s+/, '').length;

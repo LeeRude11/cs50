@@ -43,21 +43,20 @@
             </div>
           </section>
           <section id="middle-column">
-            <div id="messages-container">
-              <div id="error" class="alert" hidden>
-                <span id="error-text">Errors come here</span>
-                <button id="error-button">Dismiss</button>
-              </div>
-              <div id="confirmation" class="alert" hidden>
-                <span>Exit and delete your username?</span><button id="confirm-no">No</button><button id="confirm-yes">Yes</button>
-              </div>
-              <div id="messages"></div>
-              <form id="send-message">
-                <input type="text" id="message-text" minlength="1" autocomplete="off"
-                placeholder="Type your message" name="name"/><button>
-                  &#10148;</button>
-              </form>
+            <div id="error" class="alert" hidden>
+              <span id="error-text">Errors come here</span>
+              <button id="error-button">Dismiss</button>
             </div>
+            <div id="confirmation" class="caution" hidden>
+              <span>Exit and delete your username?</span><button id="confirm-no">No</button><button id="confirm-yes">Yes</button>
+            </div>
+            <div id="messages"></div>
+            <div id="message-notice" class="caution" hidden>New messages!</div>
+            <form id="send-message">
+              <input type="text" id="message-text" minlength="1" autocomplete="off"
+              placeholder="Type your message" name="name"/><button>
+                &#10148;</button>
+            </form>
           </section>
           <section id="right-column">
             <div id="users-list">

@@ -158,7 +158,7 @@ window.onload = function() {
     }
     new_message.textContent = message['user'] + symbol + message['text']
     messages.appendChild(new_message)
-    newMessageNotify()
+    newMessageNotice()
     return new_message
   }
 
@@ -238,7 +238,7 @@ window.onload = function() {
     }
   }
 
-  function newMessageNotify() {
+  function newMessageNotice() {
     var scrollTopMax = () => {
       return messages.scrollHeight - messages.clientHeight
     }

@@ -3,6 +3,7 @@ import os
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from collections import deque
+import re
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -58,11 +59,10 @@ def disconnect():
 @socketio.on("register")
 def register(data):
     user = data.get("username")
-    # TODO list of inappropriate names
-    if user == DEF_NAME:
-        emit("error", {"text": "Guest as name is not allowed"})
-    elif user in users:
+    if user in users:
         emit("error", {"text": f"User {user} already exists"})
+    elif not verify_input(user):
+        return None
     else:
         room = DEF_ROOM
         users[user] = {"sid": request.sid, "room": room}
@@ -80,8 +80,8 @@ def create_room(data):
 
     if check_user(user, guest_error="Guests can not create rooms") is False:
         return None
-    elif new_room in (None, ""):
-        emit("error", {"text": "Room name can not be empty"})
+    elif not verify_input(new_room):
+        return None
     elif new_room in rooms:
         emit("error", {"text": "Room with this name already exists"})
     else:
@@ -142,6 +142,16 @@ def switch_rooms(user, new_room):
     leave_current_room(user)
     users[user]["room"] = new_room
     enter_live_room(user, new_room)
+
+
+def verify_input(a_name):
+    pattern = re.compile("^[a-zA-Z]+[a-zA-Z0-9]{2,}$")
+    if pattern.match(a_name) is None:
+        emit("error", {"text": """Names must be at least 3 characters long,
+        can only contain numbers and English letters
+        and must start with letters"""})
+        return False
+    return True
 
 
 def check_user(user, auth=False, guest_error="Not allowed"):

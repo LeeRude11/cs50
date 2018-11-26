@@ -1,3 +1,26 @@
-# Project 2
+# Flask-SocketIO Web Chat
 
-Web Programming with Python and JavaScript
+A Flask-based SocketIO web chat application built using
+[Flask-SocketIO](https://github.com/miguelgrinberg/Flask-SocketIO).
+Initially created for the CS50W course
+
+# Features
+* **Main room** - a default space to which guests are restricted
+* **User authorization** - utilizing localStorage and Session ID: username is bound while he/she is connected
+* **Rooms creation** - authorized users can create rooms unavailable for guests
+* **User deletion** - give up your name and become a peasant guest once again
+* **History** - up to 100 messages for each room
+
+# Requirements
+[Pipenv installed.](https://pipenv.readthedocs.io/en/latest/install/#installing-pipenv)
+
+# Usage
+First-time only - install requirements from Pipfile:
+```
+$ pipenv install
+```
+Enter environment and start server:
+```
+$ pipenv shell
+$ flask run
+```

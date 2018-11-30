@@ -28,11 +28,13 @@ def index():
 
 @socketio.on("connect")
 def connect():
+    """Provide connected user with a list of rooms"""
     emit("load list of rooms", list(rooms.keys()))
 
 
 @socketio.on("authenticate")
 def authenticate(data):
+    """Route user to last visited room if authorized or DEF_ROOM"""
     user = data.get("username")
 
     if check_user(user, auth=True, guest_error=None) is False:
@@ -48,6 +50,7 @@ def authenticate(data):
 
 @socketio.on("disconnect")
 def disconnect():
+    """Remove disconnected user from room"""
     # TODO sloppy search
     user = next((k for k, v in users.items() if v["sid"] == request.sid),
                 DEF_NAME)
@@ -58,6 +61,7 @@ def disconnect():
 
 @socketio.on("register")
 def register(data):
+    """Return True when successfully registered a user, None otherwise"""
     user = data.get("username")
     if user in users:
         emit("error", {"text": f"User {user} already exists"})
@@ -78,6 +82,7 @@ def register(data):
 
 @socketio.on("create room")
 def create_room(data):
+    """Create room, move the creator, return True"""
     new_room = data.get("name")
     user = data.get("user")
 
@@ -99,6 +104,7 @@ def create_room(data):
 
 @socketio.on("join")
 def on_join(data):
+    """Move user from last room to provided room"""
     user = data.get("user")
     room = data.get("room")
     if check_user(user, guest_error="Guests can not change rooms") is False:
@@ -113,6 +119,7 @@ def on_join(data):
 
 @socketio.on("send")
 def send_message(data):
+    """Return True when successfully emitted a message from user"""
     user = data.get("user")
     if check_user(user, guest_error=None) is False:
         return None
@@ -130,6 +137,7 @@ def send_message(data):
 
 @socketio.on("delete user")
 def delete_user(data):
+    """Delete a user, set session to default"""
     user = data.get("user")
 
     if check_user(user, guest_error="Guests can not be deleted") is False:
@@ -142,12 +150,14 @@ def delete_user(data):
 
 
 def switch_rooms(user, new_room):
+    """Leave room, set new room in users dict, join new room"""
     leave_current_room(user)
     users[user]["room"] = new_room
     enter_live_room(user, new_room)
 
 
 def verify_input(a_name):
+    """Return True if provided name is of proper format"""
     pattern = re.compile("^[a-zA-Z]+[a-zA-Z0-9]{2,}$")
     if pattern.match(a_name) is None:
         emit("error", {"text": """Names must be at least 3 characters long,
@@ -158,7 +168,9 @@ def verify_input(a_name):
 
 
 def check_user(user, auth=False, guest_error="Not allowed"):
+    """Returns boolean of user passing checks"""
     if auth:
+        # User must be inactive before authorization
         target_sid = None
     else:
         target_sid = request.sid
@@ -166,7 +178,7 @@ def check_user(user, auth=False, guest_error="Not allowed"):
     if user == DEF_NAME:
         if guest_error:
             emit("error", {"text": guest_error})
-        # some functions accept guest users
+        # Some functions accept guest users
         else:
             return True
     elif users.get(user) is None:
@@ -179,6 +191,7 @@ def check_user(user, auth=False, guest_error="Not allowed"):
 
 
 def leave_current_room(user, action="left"):
+    """Leave room and notify its users"""
     room = users[user]["room"]
     try:
         rooms[room]["current_users"].remove(user)
@@ -191,6 +204,7 @@ def leave_current_room(user, action="left"):
 
 
 def enter_live_room(user, room):
+    """Join room, load history and user list, notify its users"""
     join_room(room)
     emit("load room", {
         "room": room,

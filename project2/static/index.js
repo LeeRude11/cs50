@@ -8,13 +8,19 @@ window.onload = function() {
   var messages = document.getElementById('messages')
   var users_list = document.querySelector('#users-list ul')
   var error_div = document.getElementById('error')
+  const discon_div = document.getElementById('disconnection')
 
   socket.on('connect', function() {
 
+    discon_div.hidden = true;
     socket.emit('authenticate', {username: display_name}, (user) => {
       setUser(user)
     })
   });
+
+  socket.on('disconnect', function() {
+    discon_div.hidden = false;
+  })
 
   var rooms_list = document.querySelector('#rooms-list ul')
   socket.on('load list of rooms', function(list_of_rooms) {
@@ -146,6 +152,9 @@ window.onload = function() {
 
   document.getElementById('error-button').onclick = () => {
     error_div.hidden = true
+  }
+  document.getElementById('discon-button').onclick = () => {
+    discon_div.hidden = true
   }
 
   function addMessage(message, notify) {

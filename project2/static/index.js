@@ -1,13 +1,13 @@
 window.onload = function() {
-  var socket = io.connect('http://' + document.domain + ':' + location.port);
+  const socket = io.connect('http://' + document.domain + ':' + location.port);
 
   const DEF_NAME = 'Guest'
   const MSG_LIMIT = 100
-  var display_name = localStorage.getItem('username') || DEF_NAME
+  let display_name = localStorage.getItem('username') || DEF_NAME
 
-  var messages = document.getElementById('messages')
-  var users_list = document.querySelector('#users-list ul')
-  var error_div = document.getElementById('error')
+  const messages = document.getElementById('messages')
+  const users_list = document.querySelector('#users-list ul')
+  const error_div = document.getElementById('error')
   const discon_div = document.getElementById('disconnection')
 
   socket.on('connect', function() {
@@ -22,7 +22,7 @@ window.onload = function() {
     discon_div.hidden = false;
   })
 
-  var rooms_list = document.querySelector('#rooms-list ul')
+  const rooms_list = document.querySelector('#rooms-list ul')
   socket.on('load list of rooms', function(list_of_rooms) {
     while (rooms_list.firstChild) {
       rooms_list.removeChild(rooms_list.firstChild)
@@ -133,7 +133,7 @@ window.onload = function() {
     flashError(data.text)
   })
 
-  var confirm_div = document.getElementById('confirmation')
+  const confirm_div = document.getElementById('confirmation')
   document.getElementById('exit').onclick = () => {
     confirm_div.hidden = false
   }
@@ -240,7 +240,7 @@ window.onload = function() {
   }
 
   function flashError(text) {
-    var error_text = document.getElementById('error-text')
+    const error_text = document.getElementById('error-text')
     error_text.textContent = 'Error: ' + text
     error_div.hidden = false
   }
@@ -252,17 +252,17 @@ window.onload = function() {
   }
 
   function newMessageNotice() {
-    var scrollTopMax = () => {
+    const scrollTopMax = () => {
       return messages.scrollHeight - messages.clientHeight
     }
-    var closeToBottom = () => {
+    const closeToBottom = () => {
       return messages.scrollTop + 50 > scrollTopMax()
     }
 
     if (closeToBottom()) {
       messages.scrollTop = scrollTopMax()
     } else {
-      var notice = document.getElementById('message-notice')
+      const notice = document.getElementById('message-notice')
       notice.hidden = false
       messages.addEventListener('scroll', () => {
         if (closeToBottom()) {

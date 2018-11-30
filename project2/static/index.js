@@ -128,7 +128,7 @@ window.onload = function() {
     if (data.user) {
       data.text += ": " + data.user + ". Your name has been set to Guest"
       document.getElementById('display-name').value = data.user
-      localStorage.removeItem('username')
+      confirm_div.hidden = false
     }
     flashError(data.text)
   })
@@ -139,12 +139,16 @@ window.onload = function() {
   }
   document.getElementById('confirm-yes').onclick = () => {
     confirm_div.hidden = true
-    socket.emit('delete user', {user: display_name}, (response) => {
-      if (response === true) {
-        localStorage.removeItem('username')
-        setUser(DEF_NAME)
-      }
-    })
+    if (display_name === DEF_NAME) {
+      localStorage.removeItem('username')
+    } else {
+      socket.emit('delete user', {user: display_name}, (response) => {
+        if (response === true) {
+          localStorage.removeItem('username')
+          setUser(DEF_NAME)
+        }
+      })
+    }
   }
   document.getElementById('confirm-no').onclick = () => {
     confirm_div.hidden = true

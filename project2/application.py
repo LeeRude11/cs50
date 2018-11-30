@@ -63,6 +63,9 @@ def register(data):
         emit("error", {"text": f"User {user} already exists"})
     elif not verify_input(user):
         return None
+    elif next((k for k, v in users.items() if v["sid"] == request.sid),
+              None) is not None:
+        emit("error", {"text": "Can not register authorized users"})
     else:
         room = DEF_ROOM
         users[user] = {"sid": request.sid, "room": room}

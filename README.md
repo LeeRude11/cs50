@@ -22,5 +22,5 @@ $ pipenv install
 Enter environment and start server:
 ```
 $ pipenv shell
-$ flask run
+$ python application.py
 ```

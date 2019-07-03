@@ -1,4 +1,4 @@
-import os
+import secrets
 
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -6,7 +6,8 @@ from collections import deque
 import re
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+# development key
+app.config["SECRET_KEY"] = secrets.token_urlsafe(16)
 socketio = SocketIO(app)
 
 LIMIT = 100
@@ -214,3 +215,7 @@ def enter_live_room(user, room):
     # load room without the new user - he's added with notify
     rooms[room]["current_users"].append(user)
     emit("notify", {"user": user, "action": "entered"}, room=room)
+
+
+if __name__ == '__main__':
+    socketio.run(app)

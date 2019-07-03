@@ -23,3 +23,6 @@ Enter environment and start server:
 $ pipenv shell
 $ python application.py
 ```
+
+![screen1](https://user-images.githubusercontent.com/30256127/60605334-c5e01200-9dd2-11e9-8f30-a409565462aa.png)
+![screen2](https://user-images.githubusercontent.com/30256127/60605343-c7a9d580-9dd2-11e9-9620-cb18a2855025.png)

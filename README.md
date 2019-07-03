@@ -2,7 +2,6 @@
 
 A Flask-based SocketIO web chat application built using
 [Flask-SocketIO](https://github.com/miguelgrinberg/Flask-SocketIO).
-Initially created for the CS50W course
 
 # Features
 * **Main room** - a default space to which guests are restricted
